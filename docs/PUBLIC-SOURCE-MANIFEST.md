@@ -1,8 +1,7 @@
 # Public source and package manifest
 
-This document defines the proposed public boundary. It does not authorize a
-visibility change, release, or npm publication. The approved GitHub review copy
-must stay private until the owners approve every publication decision.
+This document defines the public source boundary. It does not authorize an npm
+package release or publication of any target data or generated Atlas artifact.
 
 ## Public Git repository candidate
 
@@ -74,8 +73,8 @@ and file location, never the matched value. Automated detection supplements the
 required human review; it cannot prove that arbitrary text contains no private
 or personal information.
 
-The package remains `private: true` as a deliberate publication lock. The
-Apache-2.0 license and approved author metadata are present, but they do not
-authorize a release. Repository, homepage, and issue metadata point to the
-approved private GitHub destination. The local `main` branch tracks only that
-private destination, and no other branch or tag has been pushed.
+The package remains `private: true` as a deliberate npm publication lock. The
+Apache-2.0 license and approved author metadata apply to this source repository,
+but an npm release requires a separate owner decision. Repository, homepage,
+and issue metadata point to the canonical GitHub repository. The local `main`
+branch tracks only that destination, and no other branch or tag is published.

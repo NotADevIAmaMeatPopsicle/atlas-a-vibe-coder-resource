@@ -1,7 +1,7 @@
 # Contributing
 
-Atlas is not accepting public contributions before its initial release. This
-guide records the expected workflow for the release candidate.
+Issues and focused pull requests are welcome. For broad changes, open an issue
+first so the approach and public scope can be discussed before implementation.
 
 ## Development workflow
 
@@ -18,3 +18,6 @@ corpora. Synthetic fixtures must use reserved domains and fictional names.
 
 Security-sensitive changes should document the attacker-controlled input,
 trust boundary, expected invariant, and regression test.
+
+Report suspected vulnerabilities privately as described in
+[SECURITY.md](./SECURITY.md), not in a public issue.

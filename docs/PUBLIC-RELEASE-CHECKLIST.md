@@ -1,8 +1,7 @@
 # Public release checklist
 
-This repository is a private release candidate. Its only approved remote is the
-private GitHub review repository, which must remain private until the owners
-explicitly approve publication.
+This checklist records the completed preparation and approval gates for the
+initial public source repository. It does not authorize an npm package release.
 
 ## Required approvals
 
@@ -48,3 +47,5 @@ explicitly approve publication.
 - [x] Confirm the private remote contains the exact local commit and file set,
       with no additional branches or tags.
 - [ ] Change visibility only after explicit approval from both project owners.
+- [ ] Enable and verify GitHub Private Vulnerability Reporting immediately
+      after the visibility change.

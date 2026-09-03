@@ -63,7 +63,7 @@ new consent-gated operations require the new registration.
 
 Creating a viewer is not publication. Atlas does not create a Git remote, push
 commits, change repository visibility, or publish an npm package. The
-release-candidate package remains marked `private`. Its clean source branch may
-exist only in the approved private GitHub review repository; changing visibility
-or creating a release remains prohibited until the owners complete the
-[public-release checklist](./PUBLIC-RELEASE-CHECKLIST.md).
+package remains marked `private`, so publishing it requires a separate owner
+decision and an explicit metadata change. Repository visibility never grants
+permission to publish a target's source, generated workspace, run artifacts, or
+viewer output.
