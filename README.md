@@ -5,8 +5,6 @@ projects. It turns a repository into deterministic, verifiable maps of files,
 relationships, findings, and operational risks without executing the project
 being analyzed.
 
-The name is a small VCR joke: **Vibe Coder Resource**.
-
 ## Why Atlas?
 
 Large or unfamiliar codebases are difficult to reason about safely. Atlas
