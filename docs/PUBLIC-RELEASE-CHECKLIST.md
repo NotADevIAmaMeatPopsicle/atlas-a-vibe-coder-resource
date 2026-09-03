@@ -46,6 +46,6 @@ initial public source repository. It does not authorize an npm package release.
 - [x] Push only this clean `main` branch, never `--all` or `--mirror`.
 - [x] Confirm the private remote contains the exact local commit and file set,
       with no additional branches or tags.
-- [ ] Change visibility only after explicit approval from both project owners.
-- [ ] Enable and verify GitHub Private Vulnerability Reporting immediately
+- [x] Change visibility only after explicit approval from both project owners.
+- [x] Enable and verify GitHub Private Vulnerability Reporting immediately
       after the visibility change.
