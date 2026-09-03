@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.local/schemas/v1/review-execution-attempt.schema.json",
+  "title": "Atlas review execution attempt v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "attemptId", "executionId", "campaignId", "runId", "snapshotId", "packetId", "packetHash", "attemptNumber", "reviewer", "reservation", "state"],
+  "properties": {
+    "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "attemptId": { "type": "string", "pattern": "^review_attempt_[a-f0-9]{64}$" },
+    "executionId": { "type": "string", "pattern": "^review_execution_[a-f0-9]{64}$" },
+    "campaignId": { "$ref": "common.schema.json#/$defs/campaignId" },
+    "runId": { "$ref": "common.schema.json#/$defs/runId" },
+    "snapshotId": { "$ref": "common.schema.json#/$defs/snapshotId" },
+    "packetId": { "$ref": "common.schema.json#/$defs/packetId" },
+    "packetHash": { "$ref": "common.schema.json#/$defs/sha256" },
+    "attemptNumber": { "type": "integer", "minimum": 1, "maximum": 1000000 },
+    "previousAttemptId": { "type": "string", "pattern": "^review_attempt_[a-f0-9]{64}$" },
+    "reviewer": { "$ref": "#/$defs/reviewer" },
+    "reservation": { "$ref": "#/$defs/reservation" },
+    "state": { "enum": ["running", "completed", "failed"] },
+    "usage": { "$ref": "#/$defs/usage" },
+    "resultId": { "type": "string", "pattern": "^review_result_[a-f0-9]{64}$" },
+    "outcomeHash": { "$ref": "common.schema.json#/$defs/sha256" },
+    "failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message"],
+      "properties": {
+        "code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{0,127}$" },
+        "message": { "type": "string", "minLength": 1, "maxLength": 2000 }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "state": { "const": "running" } }, "required": ["state"] },
+      "then": {
+        "not": {
+          "properties": { "usage": {}, "resultId": {}, "failure": {}, "outcomeHash": {} },
+          "anyOf": [
+            { "properties": { "usage": {} }, "required": ["usage"] },
+            { "properties": { "resultId": {} }, "required": ["resultId"] },
+            { "properties": { "failure": {} }, "required": ["failure"] },
+            { "properties": { "outcomeHash": {} }, "required": ["outcomeHash"] }
+          ]
+        }
+      }
+    },
+    {
+      "if": { "properties": { "state": { "const": "completed" } }, "required": ["state"] },
+      "then": {
+        "properties": { "usage": {}, "resultId": {}, "failure": {}, "outcomeHash": {} },
+        "required": ["usage", "resultId", "outcomeHash"],
+        "not": { "properties": { "failure": {} }, "required": ["failure"] }
+      }
+    },
+    {
+      "if": { "properties": { "state": { "const": "failed" } }, "required": ["state"] },
+      "then": {
+        "properties": { "usage": {}, "failure": {}, "resultId": {}, "outcomeHash": {} },
+        "required": ["usage", "failure", "outcomeHash"],
+        "not": { "properties": { "resultId": {} }, "required": ["resultId"] }
+      }
+    }
+  ],
+  "$defs": {
+    "nonNegativeInteger": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "reviewer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "identity", "version", "promptVersion"],
+      "properties": {
+        "kind": { "enum": ["human", "agent"] },
+        "identity": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[^\\x00-\\x1F\\x7F]+$" },
+        "version": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[^\\x00-\\x1F\\x7F]+$" },
+        "promptVersion": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[^\\x00-\\x1F\\x7F]+$" }
+      }
+    },
+    "reservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tokenLimit", "timeLimitMs"],
+      "properties": {
+        "tokenLimit": { "$ref": "#/$defs/nonNegativeInteger" },
+        "timeLimitMs": { "$ref": "#/$defs/nonNegativeInteger" }
+      }
+    },
+    "usage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inputTokens", "outputTokens", "durationMs"],
+      "properties": {
+        "inputTokens": { "$ref": "#/$defs/nonNegativeInteger" },
+        "outputTokens": { "$ref": "#/$defs/nonNegativeInteger" },
+        "durationMs": { "$ref": "#/$defs/nonNegativeInteger" }
+      }
+    }
+  }
+}

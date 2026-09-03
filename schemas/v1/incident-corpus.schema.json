@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.local/schemas/v1/incident-corpus.schema.json",
+  "title": "Atlas labeled incident regression corpus v1",
+  "$defs": {
+    "fixtureFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "content"],
+      "properties": {
+        "path": { "$ref": "common.schema.json#/$defs/relativePath" },
+        "content": { "type": "string", "maxLength": 1048576 }
+      }
+    },
+    "fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["files"],
+      "properties": {
+        "files": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 100,
+          "items": { "$ref": "#/$defs/fixtureFile" }
+        }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "provenance", "cases"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "id": { "type": "string", "minLength": 1 },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "recordedAt", "target", "revision", "note"],
+      "properties": {
+        "source": { "type": "string", "minLength": 1 },
+        "recordedAt": { "type": "string", "format": "date" },
+        "target": { "type": "string", "minLength": 1 },
+        "revision": { "type": "string", "minLength": 1 },
+        "note": { "type": "string", "minLength": 1 }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "family", "ruleId", "mechanismId", "expected", "broken", "fixed"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "family": { "type": "string", "minLength": 1 },
+          "ruleId": { "type": "string", "minLength": 1 },
+          "mechanismId": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "\\S" },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["brokenMinimum", "fixedMaximum"],
+            "properties": {
+              "brokenMinimum": { "type": "integer", "minimum": 1 },
+              "fixedMaximum": { "type": "integer", "const": 0 }
+            }
+          },
+          "broken": { "$ref": "#/$defs/fixture" },
+          "fixed": { "$ref": "#/$defs/fixture" }
+        }
+      }
+    }
+  }
+}

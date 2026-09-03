@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.local/schemas/v1/historical-evidence-query.schema.json",
+  "title": "Atlas cited historical-evidence query response v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "indexId", "query", "answer", "provenance", "interpretation", "hits", "truncated"],
+  "properties": {
+    "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "indexId": { "$ref": "historical-evidence-common.schema.json#/$defs/indexId" },
+    "query": { "type": "string", "minLength": 1, "maxLength": 4096 },
+    "answer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "text"],
+      "properties": {
+        "kind": { "enum": ["matches", "abstention"] },
+        "text": { "type": "string", "minLength": 1 }
+      }
+    },
+    "provenance": { "$ref": "historical-evidence-common.schema.json#/$defs/source" },
+    "interpretation": { "$ref": "historical-evidence-common.schema.json#/$defs/interpretation" },
+    "hits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "id", "score", "title", "artifact", "matchedFields", "citations", "reviewerIdentity", "anchorFreshness", "interpretation"],
+        "properties": {
+          "kind": { "enum": ["review", "trace"] },
+          "id": { "$ref": "historical-evidence-common.schema.json#/$defs/recordId" },
+          "score": { "type": "integer", "minimum": 1 },
+          "title": { "type": "string", "minLength": 1 },
+          "artifact": { "$ref": "historical-evidence-common.schema.json#/$defs/artifact" },
+          "matchedFields": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "enum": ["artifact-path", "path-anchor", "scope-heading", "title", "trace-cluster", "trace-id", "trace-label", "trace-lifecycle", "trace-summary"]
+            }
+          },
+          "citations": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "historical-evidence-common.schema.json#/$defs/citation" }
+          },
+          "reviewerIdentity": { "$ref": "historical-evidence-common.schema.json#/$defs/reviewerIdentity" },
+          "anchorFreshness": { "$ref": "historical-evidence-common.schema.json#/$defs/anchorFreshness" },
+          "interpretation": { "$ref": "historical-evidence-common.schema.json#/$defs/interpretation" },
+          "trace": { "$ref": "historical-evidence-common.schema.json#/$defs/trace" }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "kind": { "const": "trace" } }, "required": ["kind"] },
+            "then": {
+              "properties": { "trace": { "$ref": "historical-evidence-common.schema.json#/$defs/trace" } },
+              "required": ["trace"]
+            },
+            "else": { "properties": { "trace": false } }
+          }
+        ]
+      }
+    },
+    "truncated": { "type": "boolean" }
+  }
+}

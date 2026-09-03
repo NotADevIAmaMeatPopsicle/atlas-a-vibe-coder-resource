@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.local/schemas/v1/target-registration.schema.json",
+  "title": "Atlas local target registration v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "targetId", "targetRoot", "targetConfigPath", "consent"],
+  "properties": {
+    "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "targetId": { "$ref": "common.schema.json#/$defs/targetId" },
+    "targetRoot": { "type": "string", "minLength": 1 },
+    "targetConfigPath": { "type": "string", "minLength": 1 },
+    "consent": { "$ref": "target.schema.json#/properties/consent" }
+  }
+}

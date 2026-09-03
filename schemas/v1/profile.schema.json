@@ -1,0 +1,215 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.local/schemas/v1/profile.schema.json",
+  "title": "Atlas scan profile v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "includeRoots"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "id": { "type": "string", "minLength": 1 },
+    "includeRoots": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/includeRoot" } },
+    "exclude": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/relativePath" } },
+    "entrypoints": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/relativePath" } },
+    "aliases": { "type": "object", "propertyNames": { "type": "string", "minLength": 1 }, "additionalProperties": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } } },
+    "envExampleFiles": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/relativePath" } },
+    "platformRoots": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/relativePath" } },
+    "deadCodeExemptions": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/relativePath" } },
+    "fixturePatterns": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/relativePath" } },
+    "fixtureUnresolvedImports": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "sourcePattern", "specifier"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "pattern": "\\S" },
+          "sourcePattern": { "$ref": "common.schema.json#/$defs/relativePath" },
+          "specifier": { "type": "string", "minLength": 1, "pattern": "\\S" }
+        }
+      }
+    },
+    "operationalRisks": {
+      "type": "object",
+      "additionalProperties": false,
+      "dependentRequired": {
+        "boundaries": ["protectedWriters"],
+        "protectedWriters": ["boundaries"]
+      },
+      "properties": {
+        "guardPaths": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "common.schema.json#/$defs/relativePath" }
+        },
+        "seedDictionarySources": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "common.schema.json#/$defs/relativePath" }
+        },
+        "boundaries": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "module", "protects"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1, "pattern": "\\S" },
+              "module": {
+                "allOf": [
+                  { "$ref": "common.schema.json#/$defs/relativePath" },
+                  { "not": { "type": "string", "pattern": "[?*{}\\[\\]]" } }
+                ]
+              },
+              "protects": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": { "type": "string", "minLength": 1, "pattern": "\\S" }
+              }
+            }
+          }
+        },
+        "protectedWriters": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "module", "methods"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1, "pattern": "\\S" },
+              "module": {
+                "allOf": [
+                  { "$ref": "common.schema.json#/$defs/relativePath" },
+                  { "not": { "type": "string", "pattern": "[?*{}\\[\\]]" } }
+                ]
+              },
+              "methods": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": { "type": "string", "minLength": 1, "pattern": "\\S" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "patternExpectations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "collection", "pattern", "minMatches"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "pattern": "\\S" },
+          "collection": {
+            "enum": ["includeRoots", "exclude", "entrypoints", "deadCodeExemptions", "fixturePatterns", "guardPaths", "seedDictionarySources", "loaderPaths", "loadedPatterns"]
+          },
+          "pattern": { "$ref": "common.schema.json#/$defs/relativePath" },
+          "minMatches": { "type": "integer", "minimum": 0 },
+          "maxMatches": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "loaderRules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "kind", "loaderPaths", "loadedPatterns", "scope"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "pattern": "\\S" },
+          "kind": {
+            "enum": ["sequelize-models", "migrations", "seeders", "routes", "package-scripts", "tests", "build", "cli", "custom"]
+          },
+          "loaderPaths": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "$ref": "common.schema.json#/$defs/relativePath" }
+          },
+          "loadedPatterns": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "$ref": "common.schema.json#/$defs/relativePath" }
+          },
+          "scope": { "enum": ["production", "test", "build", "cli", "migration", "seeder"] },
+          "required": { "type": "boolean" }
+        }
+      }
+    },
+    "ruleExpectations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ruleId"],
+        "properties": {
+          "ruleId": { "type": "string", "minLength": 1 },
+          "minObservations": { "type": "integer", "minimum": 0 },
+          "maxObservations": { "type": "integer", "minimum": 0 },
+          "minFindings": { "type": "integer", "minimum": 0 },
+          "maxFindings": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "lifecycleRules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "state", "paths"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "pattern": "\\S" },
+          "state": { "enum": ["active", "mothballed", "shared", "unknown"] },
+          "paths": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "allOf": [
+                { "$ref": "common.schema.json#/$defs/relativePath" },
+                { "not": { "type": "string", "pattern": "[?*{}\\[\\]]" } }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "maxFileBytes": { "type": "integer", "minimum": 1, "maximum": 8388608 },
+    "architecture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["layers", "allowedDependencies"],
+      "properties": {
+        "layers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "patterns"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "patterns": { "type": "array", "minItems": 1, "items": { "$ref": "common.schema.json#/$defs/relativePath" } }
+            }
+          }
+        },
+        "allowedDependencies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["from", "to"],
+            "properties": { "from": { "type": "string", "minLength": 1 }, "to": { "type": "string", "minLength": 1 } }
+          }
+        }
+      }
+    }
+  }
+}

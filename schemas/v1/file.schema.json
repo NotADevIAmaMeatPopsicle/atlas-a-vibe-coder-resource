@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.local/schemas/v1/file.schema.json",
+  "title": "Atlas file record v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "path", "sha256", "bytes", "kind", "language", "symbols", "environmentVariables", "evidence"],
+  "properties": {
+    "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "id": { "$ref": "common.schema.json#/$defs/fileId" },
+    "path": { "$ref": "common.schema.json#/$defs/relativePath" },
+    "sha256": { "$ref": "common.schema.json#/$defs/sha256" },
+    "bytes": { "type": "integer", "minimum": 0 },
+    "kind": { "enum": ["source", "test", "configuration", "documentation", "other"] },
+    "language": { "type": "string", "minLength": 1 },
+    "symbols": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+    "environmentVariables": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$" } },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "basis", "uncertainty", "limitation"],
+      "properties": {
+        "state": { "enum": ["active", "mothballed", "shared", "unknown", "unspecified"] },
+        "basis": { "enum": ["profile-path-rule", "no-profile-match"] },
+        "ruleId": { "type": "string", "minLength": 1, "pattern": "\\S" },
+        "uncertainty": { "const": "not-runtime-validated" },
+        "limitation": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "basis": { "const": "profile-path-rule" } }, "required": ["basis"] },
+          "then": {
+            "required": ["ruleId"],
+            "properties": {
+              "ruleId": { "type": "string", "minLength": 1, "pattern": "\\S" },
+              "limitation": { "const": "Lifecycle is a static profile declaration and has not been validated against runtime deployment, traffic, or use." }
+            }
+          },
+          "else": {
+            "properties": {
+              "state": { "const": "unspecified" },
+              "ruleId": false,
+              "limitation": { "const": "No profile lifecycle path rule matched this file; runtime deployment, traffic, and use were not evaluated." }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "state": { "const": "unspecified" } }, "required": ["state"] },
+          "then": { "properties": { "basis": { "const": "no-profile-match" } } },
+          "else": { "properties": { "basis": { "const": "profile-path-rule" } } }
+        }
+      ]
+    },
+    "evidence": { "$ref": "common.schema.json#/$defs/evidence" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "evidence": {
+            "type": "object",
+            "properties": {
+              "producer": { "const": "atlas/core-census" },
+              "producerVersion": { "enum": ["1.2.0", "1.3.0"] }
+            },
+            "required": ["producer", "producerVersion"]
+          }
+        },
+        "required": ["evidence"]
+      },
+      "then": {
+        "properties": { "lifecycle": {} },
+        "required": ["lifecycle"]
+      }
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.local/schemas/v1/git-discovery.schema.json",
+  "title": "Atlas bounded Git discovery ledger v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "provider", "state", "records", "diagnostics"],
+  "properties": {
+    "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "provider": { "const": "git" },
+    "state": { "enum": ["ready", "partial", "not-git", "unsupported"] },
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["root", "objectFormat", "head"],
+      "properties": {
+        "root": { "const": "." },
+        "objectFormat": { "enum": ["sha1", "sha256"] },
+        "head": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["state"],
+          "properties": {
+            "state": { "enum": ["attached", "detached", "unborn"] },
+            "objectId": { "type": "string", "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$" },
+            "branch": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "kind", "tracking", "indexStatus", "worktreeStatus", "conflicted", "indexEntries"],
+        "properties": {
+          "path": { "$ref": "common.schema.json#/$defs/relativePath" },
+          "kind": { "enum": ["file", "directory", "gitlink"] },
+          "tracking": { "enum": ["tracked", "untracked", "ignored"] },
+          "indexStatus": { "enum": ["clean", "added", "modified", "deleted", "renamed", "copied", "type-changed", "unmerged", "untracked", "ignored", "unknown"] },
+          "worktreeStatus": { "enum": ["clean", "added", "modified", "deleted", "renamed", "copied", "type-changed", "unmerged", "untracked", "ignored", "unknown"] },
+          "conflicted": { "type": "boolean" },
+          "indexEntries": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["mode", "objectId", "stage"],
+              "properties": {
+                "mode": { "type": "string", "pattern": "^[0-7]{6}$" },
+                "objectId": { "type": "string", "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$" },
+                "stage": { "type": "integer", "minimum": 0, "maximum": 3 }
+              }
+            }
+          },
+          "originalPath": { "$ref": "common.schema.json#/$defs/relativePath" },
+          "similarity": { "type": "integer", "minimum": 0, "maximum": 100 }
+        }
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "severity", "message"],
+        "properties": {
+          "code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" },
+          "severity": { "enum": ["info", "warning", "error"] },
+          "message": { "type": "string", "minLength": 1 },
+          "path": { "$ref": "common.schema.json#/$defs/relativePath" }
+        }
+      }
+    }
+  }
+}

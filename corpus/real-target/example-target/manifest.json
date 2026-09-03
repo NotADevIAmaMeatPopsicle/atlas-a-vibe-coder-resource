@@ -1,0 +1,186 @@
+{
+  "$schema": "../../../schemas/v1/real-target-corpus.schema.json",
+  "schemaVersion": 1,
+  "id": "example-real-target-v1",
+  "tier": "real-target",
+  "provenance": {
+    "source": "Anonymized Atlas example",
+    "recordedAt": "2026-01-01",
+    "note": "Illustrative real-target manifest containing no private repository content or provenance. Supply a matching private manifest and detached checkout for an actual evaluation."
+  },
+  "target": {
+    "repository": "example-org/example-application",
+    "revision": "0123456789abcdef0123456789abcdef01234567",
+    "objectFormat": "sha1",
+    "requireDetached": true,
+    "requireClean": true
+  },
+  "analysis": {
+    "entrypoints": [
+      "src/src/server.js",
+      "src/tests/**/*.test.js"
+    ],
+    "maxFileBytes": 8388608,
+    "operationalRisks": {
+      "guardPaths": [
+        "src/src/services/**",
+        "src/src/validators/**"
+      ],
+      "seedDictionarySources": [
+        "src/init-scripts/01-schema.sql",
+        "src/seeders/**"
+      ],
+      "boundaries": [
+        {
+          "id": "appointment-create-service",
+          "module": "src/src/services/appointment.service.js",
+          "protects": ["appointment-repository-create"]
+        }
+      ],
+      "protectedWriters": [
+        {
+          "id": "appointment-repository-create",
+          "module": "src/src/repositories/appointment.repository.js",
+          "methods": ["create"]
+        }
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "example-checkout-orchestration-guard-bypass",
+      "family": "guard-bypass-inventory",
+      "ruleId": "operational/guard-bypass-v1",
+      "mechanismId": "guard-bypass",
+      "kind": "finding",
+      "anchor": {
+        "path": "src/src/services/checkout-orchestration.service.js",
+        "line": 741,
+        "contains": "appointmentRepository.create"
+      },
+      "supportingAnchors": [
+        {
+          "path": "src/src/services/appointment.service.js",
+          "line": 12,
+          "contains": "appointmentRepository"
+        }
+      ],
+      "expected": {
+        "minimum": 1,
+        "requiredSignals": [
+          "declared-protected-writer",
+          "direct-low-level-writer-call",
+          "resolved-boundary-graph-bypass"
+        ]
+      }
+    },
+    {
+      "id": "example-confirmation-result-collapse",
+      "family": "result-collapse",
+      "ruleId": "operational/result-collapse-v1",
+      "mechanismId": "durable-success-side-effect",
+      "kind": "finding",
+      "anchor": {
+        "path": "src/src/services/notification.service.js",
+        "line": 606,
+        "contains": "confirmation_sent"
+      },
+      "supportingAnchors": [
+        {
+          "path": "src/src/services/notification.service.js",
+          "line": 299,
+          "contains": "suppressed: true"
+        },
+        {
+          "path": "src/src/services/notification.service.js",
+          "line": 386,
+          "contains": "suppressed: true"
+        }
+      ],
+      "expected": {
+        "minimum": 1,
+        "requiredSignals": [
+          "durable-success-write-without-discriminator-branch",
+          "rich-result-contract",
+          "success-outcome-literal"
+        ]
+      }
+    },
+    {
+      "id": "example-test-runner-isolated-container-mapping",
+      "family": "host-container-path-divergence",
+      "ruleId": "operational/host-container-path-divergence-v1",
+      "mechanismId": "resolved-container-test-coverage",
+      "kind": "container-mapping",
+      "anchor": {
+        "path": "docker-compose.test.yml",
+        "line": 95,
+        "contains": "test-runner-isolated:"
+      },
+      "mapping": {
+        "composePath": "docker-compose.test.yml",
+        "service": "test-runner-isolated",
+        "buildContext": "src",
+        "dockerfile": "src/Dockerfile.test",
+        "workingDirectory": "/app",
+        "hostRoot": "src",
+        "containerRoot": "/app",
+        "representativePath": "src/tests/unit/reference/appointment-status-artifacts.test.js",
+        "expectedContainerPath": "/app/tests/unit/reference/appointment-status-artifacts.test.js",
+        "sourceKind": "bind-mount",
+        "selection": "broad-test-command"
+      },
+      "expected": {
+        "forbiddenDiagnosticCodes": [
+          "OPERATIONAL_CONTAINER_MAPPING_AMBIGUOUS",
+          "OPERATIONAL_CONTAINER_MAPPING_UNDEFINED",
+          "OPERATIONAL_CONTAINER_MAPPING_UNSUPPORTED",
+          "OPERATIONAL_DOCKERFILE_UNRESOLVED"
+        ]
+      }
+    },
+    {
+      "id": "example-import-route-unmounted",
+      "family": "api-client-route-missing",
+      "ruleId": "contract/api-client-route-missing-v1",
+      "mechanismId": "literal-client-to-unmounted-express-router",
+      "kind": "finding",
+      "anchor": {
+        "path": "frontends/admin-dashboard/src/services/import.service.ts",
+        "line": 20,
+        "contains": "apiClient.post<ImportUploadResponse>('/import/upload'"
+      },
+      "supportingAnchors": [
+        {
+          "path": "src/src/app.js",
+          "line": 213,
+          "contains": "app.use(\"/api\", routes)"
+        },
+        {
+          "path": "src/src/routes/index.js",
+          "line": 218,
+          "contains": "module.exports = router"
+        },
+        {
+          "path": "src/src/routes/import.routes.js",
+          "line": 54,
+          "contains": "router.post("
+        },
+        {
+          "path": "frontends/admin-dashboard/src/services/api/client.ts",
+          "line": 331,
+          "contains": "export default apiClient"
+        }
+      ],
+      "expected": {
+        "minimum": 1,
+        "requiredSignals": [
+          "literal-client-http-call",
+          "resolved-local-http-client-facade",
+          "complete-literal-express-mount-composition",
+          "no-compatible-composed-server-route"
+        ]
+      }
+    }
+  ]
+}

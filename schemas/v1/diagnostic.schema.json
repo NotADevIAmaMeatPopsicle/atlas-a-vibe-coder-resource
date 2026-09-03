@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.local/schemas/v1/diagnostic.schema.json",
+  "title": "Atlas diagnostic record v1",
+  "$defs": {
+    "dispositionProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reviewId", "findingId", "disposition", "reviewer", "date", "evidence", "anchors", "state"],
+      "properties": {
+        "reviewId": { "type": "string", "pattern": "^finding_review_sha256_[a-f0-9]{64}(?::occurrence:[1-9][0-9]*)?$" },
+        "findingId": { "$ref": "common.schema.json#/$defs/findingId" },
+        "title": { "type": "string", "minLength": 1 },
+        "ruleId": { "type": "string", "minLength": 1 },
+        "disposition": {
+          "enum": [
+            "confirmed defect",
+            "intentional contract",
+            "false positive/profile gap",
+            "test fixture",
+            "framework-managed/external entrypoint",
+            "obsolete but cleanup separately",
+            "needs runtime/schema evidence",
+            "defer"
+          ]
+        },
+        "reviewer": { "type": "string", "minLength": 1 },
+        "date": { "type": "string", "format": "date" },
+        "evidence": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "anchors": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "sha256"],
+            "properties": {
+              "path": { "$ref": "common.schema.json#/$defs/relativePath" },
+              "sha256": { "$ref": "common.schema.json#/$defs/sha256" }
+            }
+          }
+        },
+        "state": { "enum": ["applied", "stale", "anchor-mismatch"] }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "code", "severity", "message", "evidence"],
+  "properties": {
+    "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "id": { "$ref": "common.schema.json#/$defs/diagnosticId" },
+    "code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" },
+    "severity": { "enum": ["info", "warning", "error"] },
+    "message": { "type": "string", "minLength": 1 },
+    "path": { "$ref": "common.schema.json#/$defs/relativePath" },
+    "location": { "$ref": "common.schema.json#/$defs/location" },
+    "disposition": { "$ref": "#/$defs/dispositionProjection" },
+    "evidence": { "$ref": "common.schema.json#/$defs/evidence" }
+  }
+}

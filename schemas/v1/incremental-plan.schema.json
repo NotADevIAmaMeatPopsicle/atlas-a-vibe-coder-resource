@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.local/schemas/v1/incremental-plan.schema.json",
+  "title": "Atlas deterministic incremental analysis plan v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "planId", "planner", "targetId", "baseline", "next", "compatibility", "paths", "evidenceEdges", "impact", "cache"],
+  "properties": {
+    "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "planId": { "type": "string", "pattern": "^incremental_plan_sha256_[a-f0-9]{64}$" },
+    "planner": { "$ref": "#/$defs/planner" },
+    "targetId": { "$ref": "common.schema.json#/$defs/targetId" },
+    "baseline": { "$ref": "#/$defs/runBinding" },
+    "next": { "$ref": "#/$defs/runBinding" },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["incrementalReuseEligible", "discoveryChanged", "fullRebuildReasons"],
+      "properties": {
+        "incrementalReuseEligible": { "type": "boolean" },
+        "discoveryChanged": { "type": "boolean" },
+        "fullRebuildReasons": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/fullRebuildReason" }
+        }
+      }
+    },
+    "paths": { "$ref": "#/$defs/pathChanges" },
+    "evidenceEdges": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["added", "changed", "removed"],
+      "properties": {
+        "added": { "type": "array", "items": { "$ref": "#/$defs/evidenceEdge" } },
+        "changed": { "type": "array", "items": { "$ref": "#/$defs/changedEvidenceEdge" } },
+        "removed": { "type": "array", "items": { "$ref": "#/$defs/evidenceEdge" } }
+      }
+    },
+    "impact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["seedPaths", "reverseDependencyClosurePaths", "affectedRecords"],
+      "properties": {
+        "seedPaths": { "$ref": "#/$defs/pathArray" },
+        "reverseDependencyClosurePaths": { "$ref": "#/$defs/pathArray" },
+        "affectedRecords": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["baselineFindingIds", "nextFindingIds", "baselineDiagnosticIds", "nextDiagnosticIds"],
+          "properties": {
+            "baselineFindingIds": { "$ref": "#/$defs/findingIdArray" },
+            "nextFindingIds": { "$ref": "#/$defs/findingIdArray" },
+            "baselineDiagnosticIds": { "$ref": "#/$defs/diagnosticIdArray" },
+            "nextDiagnosticIds": { "$ref": "#/$defs/diagnosticIdArray" }
+          }
+        }
+      }
+    },
+    "cache": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hitEligiblePaths", "missRequiredPaths", "evictedPaths"],
+      "properties": {
+        "hitEligiblePaths": { "$ref": "#/$defs/pathArray" },
+        "missRequiredPaths": { "$ref": "#/$defs/pathArray" },
+        "evictedPaths": { "$ref": "#/$defs/pathArray" }
+      }
+    }
+  },
+  "$defs": {
+    "planner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "const": "atlas/incremental-planner" },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "runBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runId", "artifactManifestDigest", "snapshotId", "targetId", "profileId", "profileDigest", "discoveryDigest"],
+      "properties": {
+        "runId": { "$ref": "common.schema.json#/$defs/runId" },
+        "artifactManifestDigest": { "$ref": "common.schema.json#/$defs/sha256" },
+        "snapshotId": { "$ref": "common.schema.json#/$defs/snapshotId" },
+        "targetId": { "$ref": "common.schema.json#/$defs/targetId" },
+        "profileId": { "type": "string", "minLength": 1 },
+        "profileDigest": { "$ref": "common.schema.json#/$defs/sha256" },
+        "discoveryDigest": { "$ref": "common.schema.json#/$defs/sha256" }
+      }
+    },
+    "pathArray": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "common.schema.json#/$defs/relativePath" }
+    },
+    "pathChanges": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["added", "changed", "removed"],
+      "properties": {
+        "added": { "$ref": "#/$defs/pathArray" },
+        "changed": { "$ref": "#/$defs/pathArray" },
+        "removed": { "$ref": "#/$defs/pathArray" }
+      }
+    },
+    "evidenceEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["relationshipId", "recordDigest", "fromPath", "type", "resolution"],
+      "properties": {
+        "relationshipId": { "$ref": "common.schema.json#/$defs/relationshipId" },
+        "recordDigest": { "$ref": "common.schema.json#/$defs/sha256" },
+        "fromPath": { "$ref": "common.schema.json#/$defs/relativePath" },
+        "type": { "enum": ["static-import", "dynamic-import", "require", "export-from"] },
+        "resolution": { "enum": ["resolved", "unresolved-internal", "external-package", "unsupported"] },
+        "toPath": { "$ref": "common.schema.json#/$defs/relativePath" }
+      }
+    },
+    "changedEvidenceEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["relationshipId", "before", "after"],
+      "properties": {
+        "relationshipId": { "$ref": "common.schema.json#/$defs/relationshipId" },
+        "before": { "$ref": "#/$defs/evidenceEdge" },
+        "after": { "$ref": "#/$defs/evidenceEdge" }
+      }
+    },
+    "findingIdArray": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "common.schema.json#/$defs/findingId" }
+    },
+    "diagnosticIdArray": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "common.schema.json#/$defs/diagnosticId" }
+    },
+    "fullRebuildReason": {
+      "enum": [
+        "ADAPTER_SET_CHANGED",
+        "ANALYZER_SET_CHANGED",
+        "DISCOVERY_PROVIDER_CHANGED",
+        "DISCOVERY_STATE_CHANGED",
+        "DISCOVERY_VERSION_CHANGED",
+        "PROFILE_DIGEST_CHANGED",
+        "PROFILE_ID_CHANGED",
+        "PROFILE_OBSERVATIONS_CHANGED",
+        "RUN_ID_DIGEST_CONFLICT",
+        "TOOL_CHANGED"
+      ]
+    }
+  }
+}

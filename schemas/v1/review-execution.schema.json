@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.local/schemas/v1/review-execution.schema.json",
+  "title": "Atlas review execution v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "executionId", "campaignId", "runId", "snapshotId", "state", "budgets", "packets", "revision", "pauseCount", "resumeCount"],
+  "properties": {
+    "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "executionId": { "type": "string", "pattern": "^review_execution_[a-f0-9]{64}$" },
+    "campaignId": { "$ref": "common.schema.json#/$defs/campaignId" },
+    "runId": { "$ref": "common.schema.json#/$defs/runId" },
+    "snapshotId": { "$ref": "common.schema.json#/$defs/snapshotId" },
+    "state": { "enum": ["pending", "running", "completed", "failed", "paused"] },
+    "budgets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["limits", "used", "reserved"],
+      "properties": {
+        "limits": { "$ref": "#/$defs/budgetLimits" },
+        "used": { "$ref": "#/$defs/budgetUse" },
+        "reserved": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["tokens", "timeMs"],
+          "properties": {
+            "tokens": { "$ref": "#/$defs/nonNegativeInteger" },
+            "timeMs": { "$ref": "#/$defs/nonNegativeInteger" }
+          }
+        }
+      }
+    },
+    "packets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["packetId", "packetHash", "estimatedInputTokens", "state", "attemptIds"],
+        "properties": {
+          "packetId": { "$ref": "common.schema.json#/$defs/packetId" },
+          "packetHash": { "$ref": "common.schema.json#/$defs/sha256" },
+          "estimatedInputTokens": { "$ref": "#/$defs/nonNegativeInteger" },
+          "state": { "enum": ["pending", "running", "completed", "failed"] },
+          "attemptIds": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "type": "string", "pattern": "^review_attempt_[a-f0-9]{64}$" }
+          },
+          "resultId": { "type": "string", "pattern": "^review_result_[a-f0-9]{64}$" }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "state": { "const": "completed" } }, "required": ["state"] },
+            "then": { "properties": { "resultId": {} }, "required": ["resultId"] },
+            "else": { "not": { "properties": { "resultId": {} }, "required": ["resultId"] } }
+          }
+        ]
+      }
+    },
+    "revision": { "$ref": "#/$defs/nonNegativeInteger" },
+    "pauseCount": { "$ref": "#/$defs/nonNegativeInteger" },
+    "resumeCount": { "$ref": "#/$defs/nonNegativeInteger" }
+  },
+  "$defs": {
+    "nonNegativeInteger": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "budgetLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maxPackets", "maxCalls", "maxTokens", "maxTimeMs"],
+      "properties": {
+        "maxPackets": { "$ref": "#/$defs/nonNegativeInteger" },
+        "maxCalls": { "$ref": "#/$defs/nonNegativeInteger" },
+        "maxTokens": { "$ref": "#/$defs/nonNegativeInteger" },
+        "maxTimeMs": { "$ref": "#/$defs/nonNegativeInteger" }
+      }
+    },
+    "budgetUse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["packets", "calls", "tokens", "timeMs"],
+      "properties": {
+        "packets": { "$ref": "#/$defs/nonNegativeInteger" },
+        "calls": { "$ref": "#/$defs/nonNegativeInteger" },
+        "tokens": { "$ref": "#/$defs/nonNegativeInteger" },
+        "timeMs": { "$ref": "#/$defs/nonNegativeInteger" }
+      }
+    }
+  }
+}

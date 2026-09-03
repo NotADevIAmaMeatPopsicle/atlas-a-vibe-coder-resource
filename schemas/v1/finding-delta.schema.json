@@ -1,0 +1,279 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.local/schemas/v1/finding-delta.schema.json",
+  "title": "Atlas deterministic finding delta report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "reportId", "kind", "producer", "target", "profile", "compatibility", "baseline", "candidate", "summary", "gate", "findings"],
+  "allOf": [
+    {
+      "if": {
+        "type": "object",
+        "required": ["producer"],
+        "properties": {
+          "producer": {
+            "type": "object",
+            "required": ["version"],
+            "properties": { "version": { "const": "1.1.0" } }
+          }
+        }
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "compatibility": {
+            "type": "object",
+            "required": ["basis", "contractId"],
+            "properties": { "basis": true, "contractId": true }
+          }
+        }
+      }
+    }
+  ],
+  "properties": {
+    "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "reportId": { "type": "string", "pattern": "^finding_delta_sha256_[a-f0-9]{64}$" },
+    "kind": { "const": "atlas-finding-delta-report" },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version"],
+      "properties": {
+        "id": { "const": "atlas/finding-diff" },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "dependentRequired": {
+        "candidateId": ["equivalence"],
+        "equivalence": ["candidateId"]
+      },
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/targetId" },
+        "candidateId": { "$ref": "common.schema.json#/$defs/targetId" },
+        "equivalence": { "const": "shared-git-common-directory-v1" }
+      }
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "digest"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "digest": { "$ref": "common.schema.json#/$defs/sha256" }
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["producer", "adapters", "analyzers", "dispositions"],
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "required": ["basis"],
+            "properties": { "basis": { "const": "declared-compatible" } }
+          },
+          "then": { "type": "object", "properties": { "candidate": true }, "required": ["candidate"] },
+          "else": { "not": { "type": "object", "properties": { "candidate": true }, "required": ["candidate"] } }
+        }
+      ],
+      "properties": {
+        "basis": { "enum": ["exact", "declared-compatible"] },
+        "contractId": {
+          "type": "string",
+          "pattern": "^finding_(?:contract_sha256_[a-f0-9]{64}|compatibility_[A-Za-z0-9._-]+)$"
+        },
+        "producer": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "version"],
+          "properties": {
+            "name": { "const": "atlas" },
+            "version": { "type": "string", "minLength": 1 }
+          }
+        },
+        "adapters": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "version"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "version": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "analyzers": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "dispositions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^finding-dispositions-v" }
+        },
+        "candidate": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["producer", "adapters", "analyzers"],
+          "properties": {
+            "producer": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "version"],
+              "properties": {
+                "name": { "const": "atlas" },
+                "version": { "type": "string", "minLength": 1 }
+              }
+            },
+            "adapters": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "version"],
+                "properties": {
+                  "id": { "type": "string", "minLength": 1 },
+                  "version": { "type": "string", "minLength": 1 }
+                }
+              }
+            },
+            "analyzers": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    "baseline": { "$ref": "#/$defs/runBinding" },
+    "candidate": { "$ref": "#/$defs/runBinding" },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["new", "resolved", "unchanged"],
+      "properties": {
+        "new": { "type": "integer", "minimum": 0 },
+        "resolved": { "type": "integer", "minimum": 0 },
+        "unchanged": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["matchingNewFindings", "triggered"],
+      "properties": {
+        "threshold": { "$ref": "#/$defs/severity" },
+        "matchingNewFindings": { "type": "integer", "minimum": 0 },
+        "triggered": { "type": "boolean" }
+      }
+    },
+    "findings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["new", "resolved", "unchanged"],
+      "properties": {
+        "new": { "type": "array", "items": { "$ref": "#/$defs/newEntry" } },
+        "resolved": { "type": "array", "items": { "$ref": "#/$defs/resolvedEntry" } },
+        "unchanged": { "type": "array", "items": { "$ref": "#/$defs/unchangedEntry" } }
+      }
+    }
+  },
+  "$defs": {
+    "severity": { "enum": ["info", "low", "medium", "high"] },
+    "runBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runId", "snapshotId", "artifactManifestDigest", "findingCount"],
+      "properties": {
+        "runId": { "$ref": "common.schema.json#/$defs/runId" },
+        "snapshotId": { "$ref": "common.schema.json#/$defs/snapshotId" },
+        "artifactManifestDigest": { "$ref": "common.schema.json#/$defs/sha256" },
+        "findingCount": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["findingId", "ruleId", "category", "severity", "confidence", "title", "relatedPaths", "signals", "instanceCount"],
+      "properties": {
+        "findingId": { "$ref": "common.schema.json#/$defs/findingId" },
+        "ruleId": { "type": "string", "minLength": 1 },
+        "category": { "enum": ["dead-code-candidate", "contract-mismatch", "architecture-mismatch", "operational-defect", "review-inventory", "latent-hazard"] },
+        "severity": { "$ref": "#/$defs/severity" },
+        "confidence": { "enum": ["confirmed", "high", "medium", "low", "unknown"] },
+        "title": { "type": "string", "minLength": 1 },
+        "path": { "$ref": "common.schema.json#/$defs/relativePath" },
+        "relatedPaths": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/relativePath" } },
+        "signals": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "instanceCount": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "entryBase": {
+      "type": "object",
+      "properties": {
+        "reviewIdentity": { "type": "string", "pattern": "^finding_review_sha256_[a-f0-9]{64}$" },
+        "occurrence": { "type": "integer", "minimum": 1 },
+        "status": { "enum": ["new", "resolved", "unchanged"] },
+        "baseline": { "$ref": "#/$defs/finding" },
+        "candidate": { "$ref": "#/$defs/finding" }
+      }
+    },
+    "newEntry": {
+      "allOf": [
+        { "$ref": "#/$defs/entryBase" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["reviewIdentity", "occurrence", "status", "candidate"],
+          "properties": {
+            "reviewIdentity": true,
+            "occurrence": true,
+            "status": { "const": "new" },
+            "candidate": true
+          }
+        }
+      ]
+    },
+    "resolvedEntry": {
+      "allOf": [
+        { "$ref": "#/$defs/entryBase" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["reviewIdentity", "occurrence", "status", "baseline"],
+          "properties": {
+            "reviewIdentity": true,
+            "occurrence": true,
+            "status": { "const": "resolved" },
+            "baseline": true
+          }
+        }
+      ]
+    },
+    "unchangedEntry": {
+      "allOf": [
+        { "$ref": "#/$defs/entryBase" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["reviewIdentity", "occurrence", "status", "baseline", "candidate"],
+          "properties": {
+            "reviewIdentity": true,
+            "occurrence": true,
+            "status": { "const": "unchanged" },
+            "baseline": true,
+            "candidate": true
+          }
+        }
+      ]
+    }
+  }
+}

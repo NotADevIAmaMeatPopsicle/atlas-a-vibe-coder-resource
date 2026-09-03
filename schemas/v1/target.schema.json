@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.local/schemas/v1/target.schema.json",
+  "title": "Atlas target configuration v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "path", "consent"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "id": { "$ref": "common.schema.json#/$defs/targetId" },
+    "path": { "type": "string", "minLength": 1 },
+    "consent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["agentReview", "export", "projectMemory"],
+      "properties": {
+        "agentReview": { "type": "boolean" },
+        "export": { "type": "boolean" },
+        "projectMemory": { "type": "boolean" }
+      }
+    }
+  }
+}

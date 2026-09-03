@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.local/schemas/v1/relationship.schema.json",
+  "title": "Atlas relationship record v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "from", "fromPath", "type", "specifier", "resolution", "location", "evidence"],
+  "properties": {
+    "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "id": { "$ref": "common.schema.json#/$defs/relationshipId" },
+    "from": { "$ref": "common.schema.json#/$defs/fileId" },
+    "fromPath": { "$ref": "common.schema.json#/$defs/relativePath" },
+    "to": { "$ref": "common.schema.json#/$defs/fileId" },
+    "toPath": { "$ref": "common.schema.json#/$defs/relativePath" },
+    "type": { "enum": ["static-import", "dynamic-import", "require", "export-from"] },
+    "specifier": { "type": "string", "minLength": 1 },
+    "typeOnly": { "type": "boolean" },
+    "resolution": { "enum": ["resolved", "unresolved-internal", "external-package", "unsupported"] },
+    "location": { "$ref": "common.schema.json#/$defs/location" },
+    "evidence": { "$ref": "common.schema.json#/$defs/evidence" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "resolution": { "const": "resolved" } }, "required": ["resolution"] },
+      "then": {
+        "required": ["to", "toPath"],
+        "properties": { "to": true, "toPath": true }
+      },
+      "else": { "properties": { "to": false, "toPath": false } }
+    }
+  ]
+}

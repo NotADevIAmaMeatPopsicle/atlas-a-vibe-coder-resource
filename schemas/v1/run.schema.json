@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.local/schemas/v1/run.schema.json",
+  "title": "Atlas deterministic run v1",
+  "type": "object",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "analyses": {
+            "type": "array",
+            "contains": { "type": "string", "pattern": "^analysis-health-v1" }
+          }
+        },
+        "required": ["analyses"]
+      },
+      "then": {
+        "properties": {
+          "counts": {
+            "type": "object",
+            "properties": { "findingInstances": { "type": "integer", "minimum": 0 } },
+            "required": ["findingInstances"]
+          }
+        }
+      }
+    }
+  ],
+  "required": ["schemaVersion", "runId", "snapshotId", "targetId", "profileId", "profileDigest", "tool", "adapters", "discovery", "analyses", "artifacts", "counts"],
+  "properties": {
+    "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "runId": { "$ref": "common.schema.json#/$defs/runId" },
+    "snapshotId": { "$ref": "common.schema.json#/$defs/snapshotId" },
+    "targetId": { "$ref": "common.schema.json#/$defs/targetId" },
+    "profileId": { "type": "string", "minLength": 1 },
+    "profileDigest": { "$ref": "common.schema.json#/$defs/sha256" },
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": { "name": { "const": "atlas" }, "version": { "type": "string", "minLength": 1 } }
+    },
+    "adapters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "version"],
+        "properties": { "id": { "type": "string", "minLength": 1 }, "version": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "discovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "version", "digest", "state"],
+      "properties": {
+        "provider": { "const": "git" },
+        "version": { "type": "string", "minLength": 1 },
+        "digest": { "$ref": "common.schema.json#/$defs/sha256" },
+        "state": { "enum": ["ready", "partial", "not-git", "unsupported"] }
+      }
+    },
+    "analyses": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "artifacts": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/relativePath" } },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["files", "relationships", "diagnostics", "findings"],
+      "properties": {
+        "files": { "type": "integer", "minimum": 0 },
+        "relationships": { "type": "integer", "minimum": 0 },
+        "diagnostics": { "type": "integer", "minimum": 0 },
+        "findings": { "type": "integer", "minimum": 0 },
+        "findingInstances": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

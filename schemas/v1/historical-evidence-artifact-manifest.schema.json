@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.local/schemas/v1/historical-evidence-artifact-manifest.schema.json",
+  "title": "Atlas historical-evidence artifact digest manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "indexId", "artifacts"],
+  "properties": {
+    "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "indexId": { "$ref": "historical-evidence-common.schema.json#/$defs/indexId" },
+    "artifacts": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "bytes", "sha256"],
+        "properties": {
+          "path": { "enum": ["index.json", "records.jsonl"] },
+          "bytes": { "type": "integer", "minimum": 0 },
+          "sha256": { "$ref": "common.schema.json#/$defs/sha256" }
+        }
+      }
+    }
+  }
+}

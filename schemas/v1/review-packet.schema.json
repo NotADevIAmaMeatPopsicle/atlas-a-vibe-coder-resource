@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.local/schemas/v1/review-packet.schema.json",
+  "title": "Atlas immutable review packet v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "packetId", "packetHash", "campaignId", "runId", "snapshotId", "purpose", "state", "files", "estimatedInputTokens", "requiredResultFields"],
+  "properties": {
+    "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "packetId": { "$ref": "common.schema.json#/$defs/packetId" },
+    "packetHash": { "$ref": "common.schema.json#/$defs/sha256" },
+    "campaignId": { "$ref": "common.schema.json#/$defs/campaignId" },
+    "runId": { "$ref": "common.schema.json#/$defs/runId" },
+    "snapshotId": { "$ref": "common.schema.json#/$defs/snapshotId" },
+    "purpose": { "type": "string", "minLength": 1, "maxLength": 4096 },
+    "state": { "const": "queued" },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "path", "sha256", "bytes"],
+        "properties": {
+          "id": { "$ref": "common.schema.json#/$defs/fileId" },
+          "path": { "$ref": "common.schema.json#/$defs/relativePath" },
+          "sha256": { "$ref": "common.schema.json#/$defs/sha256" },
+          "bytes": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "estimatedInputTokens": { "type": "integer", "minimum": 0 },
+    "requiredResultFields": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+  }
+}

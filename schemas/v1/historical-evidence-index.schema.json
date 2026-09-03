@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.local/schemas/v1/historical-evidence-index.schema.json",
+  "title": "Atlas immutable historical-evidence index v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "indexId", "producer", "source", "policy", "artifacts", "counts"],
+  "properties": {
+    "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "indexId": { "$ref": "historical-evidence-common.schema.json#/$defs/indexId" },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "const": "atlas/historical-evidence" },
+        "version": { "const": "1.2.0" }
+      }
+    },
+    "source": { "$ref": "historical-evidence-common.schema.json#/$defs/source" },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reviewSelection", "traceSelection", "claimBodiesImported", "validatedFindingsCreated", "defaultTrust"],
+      "properties": {
+        "reviewSelection": { "const": "reviews/*.md" },
+        "traceSelection": { "const": "named-entries-from-traces/trace-index.json" },
+        "claimBodiesImported": { "const": false },
+        "validatedFindingsCreated": { "const": false },
+        "defaultTrust": { "const": "historical-unvalidated-context" }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "prefixItems": [
+        { "const": "index.json" },
+        { "const": "records.jsonl" },
+        { "const": "artifact-digests.json" }
+      ],
+      "items": false,
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reviews", "traces", "records", "scopeAnchors", "pathAnchors"],
+      "properties": {
+        "reviews": { "type": "integer", "minimum": 0 },
+        "traces": { "type": "integer", "minimum": 0 },
+        "records": { "type": "integer", "minimum": 1 },
+        "scopeAnchors": { "type": "integer", "minimum": 0 },
+        "pathAnchors": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}
