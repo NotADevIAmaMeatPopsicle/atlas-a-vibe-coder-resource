@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.local/schemas/v1/inspect-response.schema.json",
+  "title": "Atlas inspection response v1",
+  "$defs": {
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["files", "relationships", "diagnostics", "findings"],
+      "properties": {
+        "files": { "type": "integer", "minimum": 0 },
+        "relationships": { "type": "integer", "minimum": 0 },
+        "diagnostics": { "type": "integer", "minimum": 0 },
+        "findings": { "type": "integer", "minimum": 0 },
+        "findingInstances": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "fileContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "outgoing", "incoming", "findings", "diagnostics"],
+      "properties": {
+        "file": { "$ref": "file.schema.json" },
+        "outgoing": { "type": "array", "items": { "$ref": "relationship.schema.json" } },
+        "incoming": { "type": "array", "items": { "$ref": "relationship.schema.json" } },
+        "findings": { "type": "array", "items": { "$ref": "finding.schema.json" } },
+        "diagnostics": { "type": "array", "items": { "$ref": "diagnostic.schema.json" } }
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "runId", "snapshotId", "kind", "targetId", "profileId", "counts", "findingsByCategory", "diagnosticsByCode"],
+      "properties": {
+        "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+        "runId": { "$ref": "common.schema.json#/$defs/runId" },
+        "snapshotId": { "$ref": "common.schema.json#/$defs/snapshotId" },
+        "kind": { "const": "summary" },
+        "targetId": { "$ref": "common.schema.json#/$defs/targetId" },
+        "profileId": { "type": "string", "minLength": 1 },
+        "counts": { "$ref": "#/$defs/counts" },
+        "findingsByCategory": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+        "diagnosticsByCode": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "runId", "snapshotId", "kind", "file", "outgoing", "incoming", "findings", "diagnostics"],
+      "properties": {
+        "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+        "runId": { "$ref": "common.schema.json#/$defs/runId" },
+        "snapshotId": { "$ref": "common.schema.json#/$defs/snapshotId" },
+        "kind": { "const": "file" },
+        "file": { "$ref": "file.schema.json" },
+        "outgoing": { "type": "array", "items": { "$ref": "relationship.schema.json" } },
+        "incoming": { "type": "array", "items": { "$ref": "relationship.schema.json" } },
+        "findings": { "type": "array", "items": { "$ref": "finding.schema.json" } },
+        "diagnostics": { "type": "array", "items": { "$ref": "diagnostic.schema.json" } }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "runId", "snapshotId", "kind", "symbol", "matches"],
+      "properties": {
+        "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+        "runId": { "$ref": "common.schema.json#/$defs/runId" },
+        "snapshotId": { "$ref": "common.schema.json#/$defs/snapshotId" },
+        "kind": { "const": "symbol" },
+        "symbol": { "type": "string", "minLength": 1, "maxLength": 1024 },
+        "matches": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["file", "matchedSymbols", "outgoing", "incoming", "findings", "diagnostics"],
+            "properties": {
+              "file": { "$ref": "file.schema.json" },
+              "matchedSymbols": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+              "outgoing": { "type": "array", "items": { "$ref": "relationship.schema.json" } },
+              "incoming": { "type": "array", "items": { "$ref": "relationship.schema.json" } },
+              "findings": { "type": "array", "items": { "$ref": "finding.schema.json" } },
+              "diagnostics": { "type": "array", "items": { "$ref": "diagnostic.schema.json" } }
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "runId", "snapshotId", "kind", "finding", "files", "relationships", "diagnostics"],
+      "properties": {
+        "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+        "runId": { "$ref": "common.schema.json#/$defs/runId" },
+        "snapshotId": { "$ref": "common.schema.json#/$defs/snapshotId" },
+        "kind": { "const": "finding" },
+        "finding": { "$ref": "finding.schema.json" },
+        "files": { "type": "array", "items": { "$ref": "file.schema.json" } },
+        "relationships": { "type": "array", "items": { "$ref": "relationship.schema.json" } },
+        "diagnostics": { "type": "array", "items": { "$ref": "diagnostic.schema.json" } }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "runId", "snapshotId", "kind", "seed", "direction", "requestedDepth", "nodes", "relationships", "boundaryRelationshipIds", "diagnostics", "findings", "coverage"],
+      "properties": {
+        "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+        "runId": { "$ref": "common.schema.json#/$defs/runId" },
+        "snapshotId": { "$ref": "common.schema.json#/$defs/snapshotId" },
+        "kind": { "const": "neighborhood" },
+        "seed": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "path"],
+          "properties": {
+            "id": { "$ref": "common.schema.json#/$defs/fileId" },
+            "path": { "$ref": "common.schema.json#/$defs/relativePath" }
+          }
+        },
+        "direction": { "enum": ["incoming", "outgoing", "both"] },
+        "requestedDepth": { "type": "integer", "minimum": 0, "maximum": 8 },
+        "nodes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["distance", "file"],
+            "properties": {
+              "distance": { "type": "integer", "minimum": 0, "maximum": 8 },
+              "file": { "$ref": "file.schema.json" }
+            }
+          }
+        },
+        "relationships": { "type": "array", "maxItems": 5000, "items": { "$ref": "relationship.schema.json" } },
+        "boundaryRelationshipIds": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/relationshipId" } },
+        "diagnostics": { "type": "array", "items": { "$ref": "diagnostic.schema.json" } },
+        "findings": { "type": "array", "items": { "$ref": "finding.schema.json" } },
+        "coverage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["maxNodes", "maxRelationships", "truncated", "unresolvedRelationshipIds"],
+          "properties": {
+            "maxNodes": { "type": "integer", "const": 1000 },
+            "maxRelationships": { "type": "integer", "const": 5000 },
+            "truncated": { "type": "boolean" },
+            "unresolvedRelationshipIds": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/relationshipId" } }
+          }
+        }
+      }
+    }
+  ]
+}

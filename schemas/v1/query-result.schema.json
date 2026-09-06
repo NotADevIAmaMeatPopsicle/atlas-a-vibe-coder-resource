@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.local/schemas/v1/query-result.schema.json",
+  "title": "Atlas cited project-memory query response v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "runId", "snapshotId", "query", "hits"],
+  "properties": {
+    "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "runId": { "$ref": "common.schema.json#/$defs/runId" },
+    "snapshotId": { "$ref": "common.schema.json#/$defs/snapshotId" },
+    "query": { "type": "string" },
+    "hits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "id", "score", "label", "evidence"],
+        "properties": {
+          "kind": { "enum": ["file", "relationship", "finding", "diagnostic"] },
+          "id": { "type": "string", "minLength": 1 },
+          "score": { "type": "number", "minimum": 0 },
+          "label": { "type": "string", "minLength": 1 },
+          "path": { "$ref": "common.schema.json#/$defs/relativePath" },
+          "evidence": { "type": "array", "minItems": 1, "items": { "$ref": "common.schema.json#/$defs/evidence" } }
+        }
+      }
+    }
+  }
+}

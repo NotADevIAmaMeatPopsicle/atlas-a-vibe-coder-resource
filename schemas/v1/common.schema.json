@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.local/schemas/v1/common.schema.json",
+  "$defs": {
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "targetId": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "snapshotId": { "type": "string", "pattern": "^snapshot_sha256_[a-f0-9]{64}$" },
+    "runId": { "type": "string", "pattern": "^run_sha256_[a-f0-9]{64}$" },
+    "attemptId": { "type": "string", "pattern": "^att_[0-9]{8}T[0-9]{6}Z_[a-f0-9]{32}$" },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*:)(?!.*\\\\)(?!.*\\x00)(?!.*[. ](?:\\/|$))(?!\\.{1,2}(?:\\/|$))(?!.*\\/\\.{1,2}(?:\\/|$)).+$",
+      "not": {
+        "pattern": "(^|/)(?:[Cc][Oo][Nn]|[Pp][Rr][Nn]|[Aa][Uu][Xx]|[Nn][Uu][Ll]|[Cc][Oo][Mm][0-9¹²³]|[Ll][Pp][Tt][0-9¹²³]|[Cc][Oo][Nn](?:[Ii][Nn]|[Oo][Uu][Tt])\\$)(?:\\.[^/]*)?(?:/|$)"
+      }
+    },
+    "includeRoot": {
+      "anyOf": [
+        { "const": "." },
+        { "$ref": "#/$defs/relativePath" }
+      ]
+    },
+    "fileId": { "type": "string", "pattern": "^file_sha256_[a-f0-9]{64}$" },
+    "relationshipId": { "type": "string", "pattern": "^relationship:[a-f0-9]{24}$" },
+    "diagnosticId": { "type": "string", "pattern": "^diagnostic:[a-f0-9]{24}$" },
+    "findingId": { "type": "string", "pattern": "^finding:[a-f0-9]{24}$" },
+    "campaignId": { "type": "string", "pattern": "^campaign_[a-f0-9]{64}$" },
+    "packetId": { "type": "string", "pattern": "^packet_[a-f0-9]{64}$" },
+    "location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["line", "column", "endLine", "endColumn"],
+      "properties": {
+        "line": { "type": "integer", "minimum": 1 },
+        "column": { "type": "integer", "minimum": 1 },
+        "endLine": { "type": "integer", "minimum": 1 },
+        "endColumn": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "producer", "producerVersion", "basis"],
+      "properties": {
+        "level": { "type": "integer", "minimum": 0, "maximum": 4 },
+        "producer": { "type": "string", "minLength": 1 },
+        "producerVersion": { "type": "string", "minLength": 1 },
+        "basis": { "type": "string", "minLength": 1 },
+        "path": { "$ref": "#/$defs/relativePath" },
+        "line": { "type": "integer", "minimum": 1 },
+        "column": { "type": "integer", "minimum": 1 },
+        "recordIds": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true }
+      }
+    }
+  }
+}

@@ -1,0 +1,220 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.local/schemas/v1/real-target-corpus.schema.json",
+  "title": "Atlas SHA-pinned real-target regression corpus v1",
+  "$defs": {
+    "anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "line", "contains"],
+      "properties": {
+        "path": { "$ref": "common.schema.json#/$defs/relativePath" },
+        "line": { "type": "integer", "minimum": 1 },
+        "contains": { "type": "string", "minLength": 1, "maxLength": 512 }
+      }
+    },
+    "baseCase": {
+      "type": "object",
+      "required": ["id", "family", "ruleId", "mechanismId", "kind", "anchor"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "pattern": "\\S" },
+        "family": { "type": "string", "minLength": 1, "pattern": "\\S" },
+        "ruleId": { "type": "string", "minLength": 1, "pattern": "\\S" },
+        "mechanismId": { "type": "string", "minLength": 1, "pattern": "\\S" },
+        "kind": { "enum": ["finding", "container-mapping"] },
+        "anchor": { "$ref": "#/$defs/anchor" }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "tier", "provenance", "target", "analysis", "cases"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "id": { "type": "string", "minLength": 1, "pattern": "\\S" },
+    "tier": { "const": "real-target" },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "recordedAt", "note"],
+      "properties": {
+        "source": { "type": "string", "minLength": 1 },
+        "recordedAt": { "type": "string", "format": "date" },
+        "note": { "type": "string", "minLength": 1 }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "revision", "objectFormat", "requireDetached", "requireClean"],
+      "properties": {
+        "repository": { "type": "string", "minLength": 1 },
+        "revision": { "type": "string", "pattern": "^[0-9a-f]{40}(?:[0-9a-f]{24})?$" },
+        "objectFormat": { "enum": ["sha1", "sha256"] },
+        "requireDetached": { "const": true },
+        "requireClean": { "const": true }
+      }
+    },
+    "analysis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entrypoints", "maxFileBytes", "operationalRisks"],
+      "properties": {
+        "entrypoints": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "common.schema.json#/$defs/relativePath" }
+        },
+        "maxFileBytes": { "type": "integer", "minimum": 1, "maximum": 8388608 },
+        "operationalRisks": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["guardPaths", "seedDictionarySources", "boundaries", "protectedWriters"],
+          "properties": {
+            "guardPaths": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "$ref": "common.schema.json#/$defs/relativePath" }
+            },
+            "seedDictionarySources": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "$ref": "common.schema.json#/$defs/relativePath" }
+            },
+            "boundaries": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "module", "protects"],
+                "properties": {
+                  "id": { "type": "string", "minLength": 1, "pattern": "\\S" },
+                  "module": { "$ref": "common.schema.json#/$defs/relativePath" },
+                  "protects": {
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": { "type": "string", "minLength": 1, "pattern": "\\S" }
+                  }
+                }
+              }
+            },
+            "protectedWriters": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "module", "methods"],
+                "properties": {
+                  "id": { "type": "string", "minLength": 1, "pattern": "\\S" },
+                  "module": { "$ref": "common.schema.json#/$defs/relativePath" },
+                  "methods": {
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": { "type": "string", "minLength": 1, "pattern": "\\S" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          {
+            "allOf": [
+              { "$ref": "#/$defs/baseCase" },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "family", "ruleId", "mechanismId", "kind", "anchor", "supportingAnchors", "expected"],
+                "properties": {
+                  "id": { "type": "string" },
+                  "family": { "type": "string" },
+                  "ruleId": { "type": "string" },
+                  "mechanismId": { "type": "string" },
+                  "kind": { "const": "finding" },
+                  "anchor": { "$ref": "#/$defs/anchor" },
+                  "supportingAnchors": {
+                    "type": "array",
+                    "items": { "$ref": "#/$defs/anchor" }
+                  },
+                  "expected": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["minimum", "requiredSignals"],
+                    "properties": {
+                      "minimum": { "type": "integer", "minimum": 1 },
+                      "requiredSignals": {
+                        "type": "array",
+                        "minItems": 1,
+                        "uniqueItems": true,
+                        "items": { "type": "string", "minLength": 1 }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "allOf": [
+              { "$ref": "#/$defs/baseCase" },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "family", "ruleId", "mechanismId", "kind", "anchor", "mapping", "expected"],
+                "properties": {
+                  "id": { "type": "string" },
+                  "family": { "type": "string" },
+                  "ruleId": { "type": "string" },
+                  "mechanismId": { "type": "string" },
+                  "kind": { "const": "container-mapping" },
+                  "anchor": { "$ref": "#/$defs/anchor" },
+                  "mapping": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["composePath", "service", "buildContext", "dockerfile", "workingDirectory", "hostRoot", "containerRoot", "representativePath", "expectedContainerPath", "sourceKind", "selection"],
+                    "properties": {
+                      "composePath": { "$ref": "common.schema.json#/$defs/relativePath" },
+                      "service": { "type": "string", "minLength": 1 },
+                      "buildContext": { "$ref": "common.schema.json#/$defs/relativePath" },
+                      "dockerfile": { "$ref": "common.schema.json#/$defs/relativePath" },
+                      "workingDirectory": { "type": "string", "pattern": "^/" },
+                      "hostRoot": { "$ref": "common.schema.json#/$defs/relativePath" },
+                      "containerRoot": { "type": "string", "pattern": "^/" },
+                      "representativePath": { "$ref": "common.schema.json#/$defs/relativePath" },
+                      "expectedContainerPath": { "type": "string", "pattern": "^/" },
+                      "sourceKind": { "enum": ["bind-mount", "docker-copy"] },
+                      "selection": { "enum": ["broad-test-command", "explicit-test-path"] }
+                    }
+                  },
+                  "expected": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["forbiddenDiagnosticCodes"],
+                    "properties": {
+                      "forbiddenDiagnosticCodes": {
+                        "type": "array",
+                        "uniqueItems": true,
+                        "items": { "type": "string", "minLength": 1 }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "name": "atlas-codebase-memory",
+  "version": "0.2.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "author": "Michael Griffin <NotADevIAmaMeatPopsicle@users.noreply.github.com>",
+  "packageManager": "npm@10.9.4",
+  "description": "Atlas - A Vibe Coder Resource for local-first, evidence-backed codebase analysis.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NotADevIAmaMeatPopsicle/atlas-a-vibe-coder-resource.git"
+  },
+  "homepage": "https://github.com/NotADevIAmaMeatPopsicle/atlas-a-vibe-coder-resource#readme",
+  "bugs": {
+    "url": "https://github.com/NotADevIAmaMeatPopsicle/atlas-a-vibe-coder-resource/issues"
+  },
+  "type": "module",
+  "types": "./dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
+    }
+  },
+  "bin": {
+    "atlas": "./dist/src/cli.js"
+  },
+  "files": [
+    "dist/src",
+    "corpus",
+    "docs",
+    "examples",
+    "reference/README.md",
+    "schemas/v1",
+    "scripts/create-reference-manifest.mjs",
+    "scripts/reference-manifest-support.mjs",
+    "scripts/verify-package-contents.mjs",
+    "scripts/verify-reference-manifest.mjs",
+    "CODE_OF_CONDUCT.md",
+    "CONTRIBUTING.md",
+    "README.md",
+    "SECURITY.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "pretest": "npm run build",
+    "test": "node --test dist/tests/*.test.js",
+    "check": "npm test && node scripts/verify-package-contents.mjs && node scripts/verify-public-repository.mjs",
+    "verify:package": "npm run build && node scripts/verify-package-contents.mjs",
+    "verify:public": "npm run build && node scripts/verify-package-contents.mjs && node scripts/verify-public-repository.mjs",
+    "prepack": "npm run build",
+    "regression": "npm run build && node dist/src/cli.js regression verify"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "typescript": "5.9.3"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.1"
+  }
+}

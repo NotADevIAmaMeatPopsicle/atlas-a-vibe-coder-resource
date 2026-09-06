@@ -1,0 +1,203 @@
+{
+  "$schema": "../../../schemas/v1/incident-corpus.schema.json",
+  "schemaVersion": 1,
+  "id": "synthetic-operational-risks-v1",
+  "provenance": {
+    "source": "Synthetic Atlas regression design",
+    "recordedAt": "2026-08-22",
+    "target": "example-application",
+    "revision": "not-recorded",
+    "note": "Minimized synthetic reproductions; no target source bodies or credentials are retained."
+  },
+  "cases": [
+    {
+      "id": "silent-empty-pass-with-no-tests",
+      "family": "silent-empty-instrument",
+      "ruleId": "operational/silent-empty-instrument-v1",
+      "mechanismId": "zero-observation-success",
+      "expected": { "brokenMinimum": 1, "fixedMaximum": 0 },
+      "broken": { "files": [{ "path": "package.json", "content": "{\"scripts\":{\"test\":\"vitest --passWithNoTests\"}}\n" }] },
+      "fixed": { "files": [{ "path": "package.json", "content": "{\"scripts\":{\"test\":\"vitest\"}}\n" }] }
+    },
+    {
+      "id": "pipeline-terminal-status-mask",
+      "family": "silent-empty-instrument",
+      "ruleId": "operational/silent-empty-instrument-v1",
+      "mechanismId": "pipeline-status-mask",
+      "expected": { "brokenMinimum": 1, "fixedMaximum": 0 },
+      "broken": { "files": [{ "path": "scripts/gate.sh", "content": "checker | tail -10 && commit-result\n" }] },
+      "fixed": { "files": [{ "path": "scripts/gate.sh", "content": "set -o pipefail\nchecker | tail -10 && commit-result\n" }] }
+    },
+    {
+      "id": "reported-count-without-enforcement",
+      "family": "silent-empty-instrument",
+      "ruleId": "operational/silent-empty-instrument-v1",
+      "mechanismId": "non-enforced-count",
+      "expected": { "brokenMinimum": 1, "fixedMaximum": 0 },
+      "broken": { "files": [{ "path": "scripts/count.ts", "content": "const violationCount = scanRepository().length;\nconsole.log('observed', violationCount);\n" }] },
+      "fixed": { "files": [{ "path": "scripts/count.ts", "content": "const violationCount = scanRepository().length;\nconsole.log('observed', violationCount);\nif (violationCount > 0) throw new Error('gate failed');\n" }] }
+    },
+    {
+      "id": "host-container-root-divergence",
+      "family": "host-container-path-divergence",
+      "ruleId": "operational/host-container-path-divergence-v1",
+      "mechanismId": "dirname-divergence",
+      "expected": { "brokenMinimum": 1, "fixedMaximum": 0 },
+      "broken": { "files": [{ "path": "compose.yml", "content": "services:\n  app:\n    volumes:\n      - ./src:/app\n" }, { "path": "src/tools/check.ts", "content": "const root = path.resolve(__dirname, '..', '..');\nvoid root;\n" }] },
+      "fixed": { "files": [{ "path": "compose.yml", "content": "services:\n  app:\n    volumes:\n      - ./src:/app\n" }, { "path": "src/tools/check.ts", "content": "const root = findUpRequired('package.json');\nvoid root;\n" }] }
+    },
+    {
+      "id": "host-rooted-literal-under-container-root",
+      "family": "host-container-path-divergence",
+      "ruleId": "operational/host-container-path-divergence-v1",
+      "mechanismId": "host-rooted-literal",
+      "expected": { "brokenMinimum": 1, "fixedMaximum": 0 },
+      "broken": { "files": [{ "path": "compose.yml", "content": "services:\n  app:\n    volumes:\n      - ./src:/app\n" }, { "path": "src/tools/check.ts", "content": "const files = globSync('src/**/*.ts');\nvoid files;\n" }] },
+      "fixed": { "files": [{ "path": "compose.yml", "content": "services:\n  app:\n    volumes:\n      - ./src:/app\n" }, { "path": "src/tools/check.ts", "content": "const files = globSync('**/*.ts');\nvoid files;\n" }] }
+    },
+    {
+      "id": "copy-only-container-check-input",
+      "family": "host-container-path-divergence",
+      "ruleId": "operational/host-container-path-divergence-v1",
+      "mechanismId": "copy-only-runtime-source",
+      "expected": { "brokenMinimum": 1, "fixedMaximum": 0 },
+      "broken": { "files": [{ "path": "compose.yml", "content": "services:\n  test-runner:\n    build:\n      context: .\n      dockerfile: Dockerfile\n      target: test\n    volumes:\n      - ./tests:/app/tests\n      - dependencies:/app/node_modules\n      - /app/cache\n    command: [\"npm\", \"run\", \"test:docker\"]\nvolumes:\n  dependencies:\n" }, { "path": "Dockerfile", "content": "FROM node:20-alpine AS base\nWORKDIR /app\nCOPY src/ .\nFROM base AS test\nCOPY tests/ ./tests/\nFROM node:20-alpine AS unrelated\nCOPY other/ /wrong/\n" }, { "path": "tests/reference/artifacts.test.ts", "content": "const content = readRepoFile('src/seeders/status.js');\nvoid content;\n" }, { "path": "src/seeders/status.js", "content": "module.exports = {};\n" }, { "path": "other/ignored.js", "content": "module.exports = {};\n" }] },
+      "fixed": { "files": [{ "path": "compose.yml", "content": "services:\n  test-runner:\n    build:\n      context: .\n      dockerfile: Dockerfile\n      target: test\n    volumes:\n      - ./tests:/app/tests\n      - ./src/seeders:/app/seeders\n      - dependencies:/app/node_modules\n      - /app/cache\n    command: [\"npm\", \"run\", \"test:docker\"]\nvolumes:\n  dependencies:\n" }, { "path": "Dockerfile", "content": "FROM node:20-alpine AS base\nWORKDIR /app\nCOPY src/ .\nFROM base AS test\nCOPY tests/ ./tests/\nFROM node:20-alpine AS unrelated\nCOPY other/ /wrong/\n" }, { "path": "tests/reference/artifacts.test.ts", "content": "const content = readRepoFile('src/seeders/status.js');\nvoid content;\n" }, { "path": "src/seeders/status.js", "content": "module.exports = {};\n" }, { "path": "other/ignored.js", "content": "module.exports = {};\n" }] }
+    },
+    {
+      "id": "direct-repository-guard-bypass",
+      "family": "guard-bypass-inventory",
+      "ruleId": "operational/guard-bypass-v1",
+      "mechanismId": "guard-bypass",
+      "expected": { "brokenMinimum": 1, "fixedMaximum": 0 },
+      "broken": { "files": [{ "path": "src/repositories/appointment.ts", "content": "const appointmentRepository = { create(input) { return input; } };\nmodule.exports = appointmentRepository;\n" }, { "path": "src/services/appointment.service.ts", "content": "const appointmentRepository = require('../repositories/appointment.js');\nconst create = input => appointmentRepository.create(input);\nmodule.exports = { create };\n" }, { "path": "src/services/checkout-orchestration.service.ts", "content": "const appointmentRepository = require('../repositories/appointment.js');\nconst checkout = input => appointmentRepository.create(input);\nmodule.exports = { checkout };\n" }] },
+      "fixed": { "files": [{ "path": "src/repositories/appointment.ts", "content": "const appointmentRepository = { create(input) { return input; } };\nmodule.exports = appointmentRepository;\n" }, { "path": "src/services/appointment.service.ts", "content": "const appointmentRepository = require('../repositories/appointment.js');\nconst create = input => appointmentRepository.create(input);\nmodule.exports = { create };\n" }, { "path": "src/services/checkout-orchestration.service.ts", "content": "const { create } = require('./appointment.service.js');\nconst checkout = input => create(input);\nmodule.exports = { checkout };\n" }] }
+    },
+    {
+      "id": "duplicate-live-status-vocabulary",
+      "family": "duplicate-live-vocabulary",
+      "ruleId": "contract/vocabulary-drift-v1",
+      "mechanismId": "vocabulary-drift",
+      "expected": { "brokenMinimum": 1, "fixedMaximum": 0 },
+      "broken": { "files": [{ "path": "src/statuses.ts", "content": "export const APPOINTMENT_STATUS_VALUES = ['QUEUED', 'CANCELLED'];\n" }, { "path": "src/types.ts", "content": "export type AppointmentStatus = 'QUEUED' | 'COMPLETED';\n" }] },
+      "fixed": { "files": [{ "path": "src/statuses.ts", "content": "export const APPOINTMENT_STATUS_VALUES = ['QUEUED', 'CANCELLED'];\n" }, { "path": "src/types.ts", "content": "export type AppointmentStatus = 'QUEUED' | 'CANCELLED';\n" }] }
+    },
+    {
+      "id": "absolute-date-with-live-clock",
+      "family": "clock-and-date-basis",
+      "ruleId": "operational/clock-date-basis-v1",
+      "mechanismId": "absolute-test-date",
+      "expected": { "brokenMinimum": 1, "fixedMaximum": 0 },
+      "broken": { "files": [{ "path": "tests/availability.test.ts", "content": "it('books', () => expect(book(new Date('2099-07-01T00:00:00Z'))).toBe(true));\n" }] },
+      "fixed": { "files": [{ "path": "tests/availability.test.ts", "content": "jest.useFakeTimers();\njest.setSystemTime(new Date('2099-06-01T00:00:00Z'));\nit('books', () => expect(book(new Date('2099-07-01T00:00:00Z'))).toBe(true));\n" }] }
+    },
+    {
+      "id": "open-ended-date-range",
+      "family": "clock-and-date-basis",
+      "ruleId": "operational/clock-date-basis-v1",
+      "mechanismId": "open-ended-date-range",
+      "expected": { "brokenMinimum": 1, "fixedMaximum": 0 },
+      "broken": { "files": [{ "path": "src/repositories/appointment.ts", "content": "export const query = `SELECT * FROM appointments WHERE appointment_date >= $1`;\n" }] },
+      "fixed": { "files": [{ "path": "src/repositories/appointment.ts", "content": "export const query = `SELECT * FROM appointments WHERE appointment_date >= $1 AND appointment_date < $2`;\n" }] }
+    },
+    {
+      "id": "tenant-logic-reads-process-clock",
+      "family": "clock-and-date-basis",
+      "ruleId": "operational/clock-date-basis-v1",
+      "mechanismId": "tenant-process-clock",
+      "expected": { "brokenMinimum": 1, "fixedMaximum": 0 },
+      "broken": { "files": [{ "path": "src/services/daily-report.ts", "content": "export function report(tenantId) { const today = new Date(); return load(tenantId, today); }\n" }] },
+      "fixed": { "files": [{ "path": "src/services/daily-report.ts", "content": "export function report(tenantId, clock) { const today = localDateFor(tenantId, clock); return load(tenantId, today); }\n" }] }
+    },
+    {
+      "id": "date-predicate-omits-time",
+      "family": "clock-and-date-basis",
+      "ruleId": "operational/clock-date-basis-v1",
+      "mechanismId": "date-without-time",
+      "expected": { "brokenMinimum": 1, "fixedMaximum": 0 },
+      "broken": { "files": [{ "path": "schema.sql", "content": "CREATE TABLE appointments (appointment_date DATE, start_time TIME);\n" }, { "path": "src/repositories/appointment.ts", "content": "export const query = `SELECT * FROM appointments WHERE appointment_date >= $1 AND appointment_date < $2`;\n" }] },
+      "fixed": { "files": [{ "path": "schema.sql", "content": "CREATE TABLE appointments (appointment_date DATE, start_time TIME);\n" }, { "path": "src/repositories/appointment.ts", "content": "export const query = `SELECT * FROM appointments WHERE appointment_date >= $1 AND appointment_date < $2 AND start_time >= $3`;\n" }] }
+    },
+    {
+      "id": "suppressed-result-collapse",
+      "family": "result-collapse",
+      "ruleId": "operational/result-collapse-v1",
+      "mechanismId": "result-collapse",
+      "expected": { "brokenMinimum": 1, "fixedMaximum": 0 },
+      "broken": { "files": [{ "path": "src/notify.ts", "content": "function send(){ return {success:true,suppressed:true}; }\nconst {success}=send();\nvoid success;\n" }] },
+      "fixed": { "files": [{ "path": "src/notify.ts", "content": "function send(){ return {success:true,suppressed:true}; }\nconst {success,suppressed}=send();\nvoid success; void suppressed;\n" }] }
+    },
+    {
+      "id": "durable-success-side-effect-after-suppressed-result",
+      "family": "result-collapse",
+      "ruleId": "operational/result-collapse-v1",
+      "mechanismId": "durable-success-side-effect",
+      "expected": { "brokenMinimum": 1, "fixedMaximum": 0 },
+      "broken": { "files": [{ "path": "src/notification-service.ts", "content": "class NotificationService {\n  async sendEmail(enabled) {\n    if (!enabled) return { success: true, messageId: 'suppressed', suppressed: true };\n    return { success: true, messageId: 'delivered' };\n  }\n  async logNotification(id, action) {\n    await sequelize.query('INSERT INTO notification_history(action) VALUES ($1)', { bind: [action] });\n  }\n  async confirm(id) {\n    await this.sendEmail(false);\n    await this.logNotification(id, 'confirmation_sent');\n  }\n}\n" }] },
+      "fixed": { "files": [{ "path": "src/notification-service.ts", "content": "class NotificationService {\n  async sendEmail(enabled) {\n    if (!enabled) return { success: true, messageId: 'suppressed', suppressed: true };\n    return { success: true, messageId: 'delivered' };\n  }\n  async logNotification(id, action) {\n    await sequelize.query('INSERT INTO notification_history(action) VALUES ($1)', { bind: [action] });\n  }\n  async confirm(id) {\n    const outcome = await this.sendEmail(false);\n    if (outcome.suppressed) return;\n    await this.logNotification(id, 'confirmation_sent');\n  }\n}\n" }] }
+    },
+    {
+      "id": "caught-error-without-durable-outcome",
+      "family": "result-collapse",
+      "ruleId": "operational/result-collapse-v1",
+      "mechanismId": "swallowed-catch",
+      "expected": { "brokenMinimum": 1, "fixedMaximum": 0 },
+      "broken": { "files": [{ "path": "src/notifications/send.ts", "content": "export async function deliverRequired() { try { return await deliver(); } catch (error) { console.log(error); } }\n" }] },
+      "fixed": { "files": [{ "path": "src/notifications/send.ts", "content": "export async function deliverRequired() { try { return await deliver(); } catch (error) { throw error; } }\n" }] }
+    },
+    {
+      "id": "cli-error-reports-success",
+      "family": "result-collapse",
+      "ruleId": "operational/result-collapse-v1",
+      "mechanismId": "cli-success-on-error",
+      "expected": { "brokenMinimum": 1, "fixedMaximum": 0 },
+      "broken": { "files": [{ "path": "src/cli/run.ts", "content": "console.log('operation failed'); process.exit(0);\n" }] },
+      "fixed": { "files": [{ "path": "src/cli/run.ts", "content": "console.error('operation failed'); process.exit(1);\n" }] }
+    },
+    {
+      "id": "duplicated-tenant-status-guard",
+      "family": "duplicate-guard-fragment",
+      "ruleId": "operational/duplicate-guard-fragment-v1",
+      "mechanismId": "duplicate-guard",
+      "expected": { "brokenMinimum": 1, "fixedMaximum": 0 },
+      "broken": { "files": [{ "path": "src/a.ts", "content": "if (tenant === owner && status === activeStatus) { allow(); }\n" }, { "path": "src/b.ts", "content": "if (tenant === owner && status === activeStatus) { allow(); }\n" }] },
+      "fixed": { "files": [{ "path": "src/a.ts", "content": "if (tenant === owner && status === activeStatus) { allow(); }\n" }, { "path": "src/b.ts", "content": "if (canReadTenant(request)) { allow(); }\n" }] }
+    },
+    {
+      "id": "seeded-status-integer-mismatch",
+      "family": "seeded-dictionary-coupling",
+      "ruleId": "contract/seeded-dictionary-id-coupling-v1",
+      "mechanismId": "seed-id-name-mismatch",
+      "expected": { "brokenMinimum": 1, "fixedMaximum": 0 },
+      "broken": { "files": [{ "path": "db/statuses.sql", "content": "INSERT INTO statuses(id,name) VALUES (6,'CANCELED'),(7,'RESCHEDULED');\n" }, { "path": "src/status.ts", "content": "const STATUS_ID_MAP={CANCELED:7};\n" }] },
+      "fixed": { "files": [{ "path": "db/statuses.sql", "content": "INSERT INTO statuses(id,name) VALUES (6,'CANCELED'),(7,'RESCHEDULED');\n" }, { "path": "src/status.ts", "content": "const STATUS_ID_MAP={CANCELED:6};\n" }] }
+    },
+    {
+      "id": "seeded-status-name-missing",
+      "family": "seeded-dictionary-coupling",
+      "ruleId": "contract/seeded-dictionary-id-coupling-v1",
+      "mechanismId": "seed-name-missing",
+      "expected": { "brokenMinimum": 1, "fixedMaximum": 0 },
+      "broken": { "files": [{ "path": "db/statuses.sql", "content": "INSERT INTO statuses(id,name) VALUES (6,'CANCELED'),(7,'RESCHEDULED');\n" }, { "path": "src/status.ts", "content": "const missing = findStatusByName('ARCHIVED');\nvoid missing;\n" }] },
+      "fixed": { "files": [{ "path": "db/statuses.sql", "content": "INSERT INTO statuses(id,name) VALUES (6,'CANCELED'),(7,'RESCHEDULED');\n" }, { "path": "src/status.ts", "content": "const existing = findStatusByName('CANCELED');\nvoid existing;\n" }] }
+    },
+    {
+      "id": "test-couples-seeded-status-to-integer",
+      "family": "seeded-dictionary-coupling",
+      "ruleId": "contract/seeded-dictionary-id-coupling-v1",
+      "mechanismId": "seed-test-integer-coupling",
+      "expected": { "brokenMinimum": 1, "fixedMaximum": 0 },
+      "broken": { "files": [{ "path": "db/statuses.sql", "content": "INSERT INTO statuses(id,name) VALUES (6,'CANCELED'),(7,'RESCHEDULED');\n" }, { "path": "tests/status.test.ts", "content": "expect(result.status_id).toBe(7);\n" }] },
+      "fixed": { "files": [{ "path": "db/statuses.sql", "content": "INSERT INTO statuses(id,name) VALUES (6,'CANCELED'),(7,'RESCHEDULED');\n" }, { "path": "tests/status.test.ts", "content": "expect(result.status_id).toBe(resolveStatusId('CANCELED'));\n" }] }
+    },
+    {
+      "id": "unconsumed-protection-value",
+      "family": "latent-accidental-protection",
+      "ruleId": "latent/accidental-protection-v1",
+      "mechanismId": "unconsumed-protection",
+      "expected": { "brokenMinimum": 1, "fixedMaximum": 0 },
+      "broken": { "files": [{ "path": "src/audit.ts", "content": "function save(input){ const statusId=resolveStatus(input.status); return auditStore.create({name:input.name}); }\n" }] },
+      "fixed": { "files": [{ "path": "src/audit.ts", "content": "function save(input){ const statusId=resolveStatus(input.status); return auditStore.create({name:input.name,statusId}); }\n" }] }
+    }
+  ]
+}

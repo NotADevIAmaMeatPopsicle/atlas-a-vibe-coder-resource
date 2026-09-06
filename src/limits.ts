@@ -1,0 +1,4 @@
+export const HARD_MAX_FILE_BYTES = 8 * 1024 * 1024;
+export const HARD_MAX_INCLUDED_FILES = 25_000;
+export const HARD_MAX_TOTAL_BYTES = 128 * 1024 * 1024;
+export const HARD_MAX_BOUNDARY_ENTRIES = 100_000;

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.local/schemas/v1/attempt.schema.json",
+  "title": "Atlas volatile execution attempt v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "attemptId", "targetPath", "targetConfigPath", "profilePath", "startedAt", "finishedAt", "status"],
+  "properties": {
+    "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "attemptId": { "$ref": "common.schema.json#/$defs/attemptId" },
+    "runId": { "$ref": "common.schema.json#/$defs/runId" },
+    "targetPath": { "type": "string", "minLength": 1 },
+    "targetConfigPath": { "type": "string", "minLength": 1 },
+    "profilePath": { "type": "string", "minLength": 1 },
+    "startedAt": { "type": "string", "format": "date-time" },
+    "finishedAt": { "type": "string", "format": "date-time" },
+    "status": { "enum": ["completed", "reused", "failed"] },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message"],
+      "properties": { "code": { "type": "string" }, "message": { "type": "string" } }
+    }
+  }
+}

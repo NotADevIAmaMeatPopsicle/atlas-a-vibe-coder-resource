@@ -1,0 +1,11 @@
+{
+  "$schema": "../schemas/v1/target.schema.json",
+  "schemaVersion": 1,
+  "id": "target_minimal-js-ts",
+  "path": "./minimal-js-ts-repository",
+  "consent": {
+    "agentReview": false,
+    "export": false,
+    "projectMemory": false
+  }
+}

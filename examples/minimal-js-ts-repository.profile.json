@@ -1,0 +1,42 @@
+{
+  "$schema": "../schemas/v1/profile.schema.json",
+  "schemaVersion": 1,
+  "id": "profile_minimal-js-ts",
+  "includeRoots": [
+    ".env.example",
+    "README.md",
+    "platform",
+    "src",
+    "test"
+  ],
+  "exclude": [
+    "dist/**",
+    "node_modules/**"
+  ],
+  "entrypoints": [
+    "src/index.ts"
+  ],
+  "aliases": {},
+  "envExampleFiles": [
+    ".env.example"
+  ],
+  "platformRoots": [
+    "platform"
+  ],
+  "deadCodeExemptions": [],
+  "patternExpectations": [
+    {
+      "id": "optional-build-output",
+      "collection": "exclude",
+      "pattern": "dist/**",
+      "minMatches": 0
+    },
+    {
+      "id": "optional-dependency-tree",
+      "collection": "exclude",
+      "pattern": "node_modules/**",
+      "minMatches": 0
+    }
+  ],
+  "maxFileBytes": 1048576
+}

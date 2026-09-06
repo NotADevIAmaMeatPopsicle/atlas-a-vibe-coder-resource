@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.local/schemas/v1/snapshot.schema.json",
+  "title": "Atlas immutable snapshot v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "snapshotId", "targetId", "boundary", "boundaryDiagnostics", "files"],
+  "properties": {
+    "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "snapshotId": { "$ref": "common.schema.json#/$defs/snapshotId" },
+    "targetId": { "$ref": "common.schema.json#/$defs/targetId" },
+    "boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["includeRoots", "exclude", "maxFileBytes", "symlinkPolicy"],
+      "properties": {
+        "includeRoots": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/includeRoot" } },
+        "exclude": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/relativePath" } },
+        "maxFileBytes": { "type": "integer", "minimum": 1 },
+        "symlinkPolicy": { "const": "deny" }
+      }
+    },
+    "boundaryDiagnostics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "code", "severity"],
+        "properties": {
+          "id": { "$ref": "common.schema.json#/$defs/diagnosticId" },
+          "code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" },
+          "severity": { "enum": ["info", "warning", "error"] },
+          "path": { "$ref": "common.schema.json#/$defs/relativePath" }
+        }
+      }
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "path", "sha256", "bytes"],
+        "properties": {
+          "id": { "$ref": "common.schema.json#/$defs/fileId" },
+          "path": { "$ref": "common.schema.json#/$defs/relativePath" },
+          "sha256": { "$ref": "common.schema.json#/$defs/sha256" },
+          "bytes": { "type": "integer", "minimum": 0 }
+        }
+      }
+    }
+  }
+}

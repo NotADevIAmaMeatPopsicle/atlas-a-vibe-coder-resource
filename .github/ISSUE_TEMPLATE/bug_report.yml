@@ -1,0 +1,53 @@
+name: Bug report
+description: Report a reproducible Atlas defect.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve Atlas. Do not include credentials, private source, personal data, or confidential generated artifacts. Security vulnerabilities belong in GitHub's private vulnerability-reporting form.
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Describe the observed behavior and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Provide synthetic inputs and exact commands that reproduce the problem.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Atlas version or commit
+      placeholder: 0.2.0 or a full commit SHA
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Include the operating system, Node.js version, and npm version.
+      placeholder: Windows 11, Node.js 22.23.2, npm 10.9.4
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Sanitized output
+      description: Include relevant errors or diagnostics only after removing private paths and sensitive values.
+      render: text
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety check
+      options:
+        - label: I removed credentials, personal data, private source, and confidential Atlas artifacts.
+          required: true
+        - label: This is not a security vulnerability requiring private disclosure.
+          required: true

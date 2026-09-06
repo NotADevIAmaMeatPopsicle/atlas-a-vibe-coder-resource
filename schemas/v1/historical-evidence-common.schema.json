@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.local/schemas/v1/historical-evidence-common.schema.json",
+  "$defs": {
+    "indexId": {
+      "type": "string",
+      "pattern": "^historical_evidence_sha256_[a-f0-9]{64}$"
+    },
+    "recordId": {
+      "type": "string",
+      "pattern": "^historical_record_sha256_[a-f0-9]{64}$"
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "bytes", "sha256"],
+      "properties": {
+        "path": { "$ref": "common.schema.json#/$defs/relativePath" },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "sha256": { "$ref": "common.schema.json#/$defs/sha256" }
+      }
+    },
+    "citation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "line", "column", "basis"],
+      "properties": {
+        "path": { "$ref": "common.schema.json#/$defs/relativePath" },
+        "sha256": { "$ref": "common.schema.json#/$defs/sha256" },
+        "line": { "type": "integer", "minimum": 1 },
+        "column": { "type": "integer", "minimum": 1 },
+        "basis": {
+          "enum": ["artifact-path", "title", "scope-heading", "path-anchor", "trace-index-entry", "reviewer-metadata"]
+        }
+      }
+    },
+    "reviewerIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "identity", "reason"],
+      "properties": {
+        "status": { "enum": ["recorded", "unavailable"] },
+        "identity": { "type": ["string", "null"] },
+        "reason": { "type": "string", "minLength": 1 },
+        "citation": { "$ref": "#/$defs/citation" }
+      }
+    },
+    "anchorFreshness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "checkedAgainstSourceHead", "reason"],
+      "properties": {
+        "status": { "const": "unavailable" },
+        "checkedAgainstSourceHead": { "type": "null" },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "interpretation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["usage", "claimBodiesImported", "validatedFindingsCreated"],
+      "properties": {
+        "usage": { "const": "historical-navigation-context-only" },
+        "claimBodiesImported": { "const": false },
+        "validatedFindingsCreated": { "const": false }
+      }
+    },
+    "trace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "clusterId", "lifecycle", "historicalUnvalidatedSummary", "citation"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "clusterId": { "type": "string", "minLength": 1 },
+        "lifecycle": { "type": "string", "minLength": 1 },
+        "historicalUnvalidatedSummary": { "type": "string", "minLength": 1 },
+        "citation": { "$ref": "#/$defs/citation" }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "referencePath",
+        "manifestFileName",
+        "manifestSha256",
+        "referenceAggregateSha256",
+        "sourceAggregateSha256",
+        "referenceFileCount",
+        "referenceTotalBytes",
+        "sourceGitHead",
+        "sourceAtlasPath",
+        "sourceDirtyStatusSha256",
+        "sourceDirtyStatusLineCount"
+      ],
+      "properties": {
+        "referencePath": { "$ref": "common.schema.json#/$defs/relativePath" },
+        "manifestFileName": { "type": "string", "pattern": "^[^/\\\\:]+$" },
+        "manifestSha256": { "$ref": "common.schema.json#/$defs/sha256" },
+        "referenceAggregateSha256": { "$ref": "common.schema.json#/$defs/sha256" },
+        "sourceAggregateSha256": { "$ref": "common.schema.json#/$defs/sha256" },
+        "referenceFileCount": { "type": "integer", "minimum": 1 },
+        "referenceTotalBytes": { "type": "integer", "minimum": 0 },
+        "sourceGitHead": { "type": "string", "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$" },
+        "sourceAtlasPath": { "$ref": "common.schema.json#/$defs/relativePath" },
+        "sourceDirtyStatusSha256": { "$ref": "common.schema.json#/$defs/sha256" },
+        "sourceDirtyStatusLineCount": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

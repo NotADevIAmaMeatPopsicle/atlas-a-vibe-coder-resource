@@ -1,0 +1,33 @@
+name: Feature request
+description: Propose a focused improvement to Atlas.
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What workflow or limitation should Atlas address?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the desired behavior, including any CLI or artifact-contract changes.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Note any workarounds or narrower approaches you considered.
+  - type: checkboxes
+    id: boundaries
+    attributes:
+      label: Project boundaries
+      options:
+        - label: The proposal preserves local-first operation and does not require executing target code.
+          required: true
+        - label: Any new network, data-retention, or egress behavior is identified explicitly above.
+          required: true

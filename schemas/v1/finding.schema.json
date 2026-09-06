@@ -1,0 +1,210 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.local/schemas/v1/finding.schema.json",
+  "title": "Atlas candidate finding record v1",
+  "$defs": {
+    "modelStorageDataContractSubject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "table", "column", "dimension", "model", "storage"],
+      "properties": {
+        "kind": { "const": "data-contract" },
+        "table": { "type": "string", "minLength": 1, "maxLength": 1024 },
+        "column": { "type": "string", "minLength": 1, "maxLength": 1024 },
+        "dimension": {
+          "enum": ["column-presence", "column-mapping", "type-family", "nullability", "default", "enum-members"]
+        },
+        "model": { "enum": ["prisma", "sequelize"] },
+        "storage": { "enum": ["sql", "sequelize-migration"] }
+      }
+    },
+    "provisioningPathDataContractSubject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "table", "column", "dimension", "comparison", "migration", "bootstrap"],
+      "properties": {
+        "kind": { "const": "data-contract" },
+        "table": { "type": "string", "minLength": 1, "maxLength": 1024 },
+        "column": { "type": "string", "minLength": 1, "maxLength": 1024 },
+        "dimension": { "const": "enum-members" },
+        "comparison": { "const": "provisioning-path" },
+        "migration": { "const": "sequelize-migration" },
+        "bootstrap": { "const": "sql-bootstrap" }
+      }
+    },
+    "dataContractSubject": {
+      "oneOf": [
+        { "$ref": "#/$defs/modelStorageDataContractSubject" },
+        { "$ref": "#/$defs/provisioningPathDataContractSubject" }
+      ]
+    },
+    "findingInstance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "severity", "confidence", "relatedPaths", "signals", "evidence"],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/findingId" },
+        "severity": { "enum": ["info", "low", "medium", "high"] },
+        "confidence": { "enum": ["confirmed", "high", "medium", "low", "unknown"] },
+        "path": { "$ref": "common.schema.json#/$defs/relativePath" },
+        "location": { "$ref": "common.schema.json#/$defs/location" },
+        "relatedPaths": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/relativePath" } },
+        "signals": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "evidence": { "type": "array", "minItems": 1, "items": { "$ref": "common.schema.json#/$defs/evidence" } },
+        "subject": { "$ref": "#/$defs/dataContractSubject" },
+        "impactContext": { "$ref": "#/$defs/impactContext" }
+      }
+    },
+    "impactContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reachability", "entrypoints", "mountedSurfaces", "featureGate", "summary", "limitations"],
+      "properties": {
+        "reachability": { "enum": ["reachable", "unreachable", "coverage-incomplete", "mixed", "unknown"] },
+        "scope": { "enum": ["production", "test", "build", "cli", "migration", "seeder"] },
+        "entrypoints": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/relativePath" } },
+        "entrypointRemainder": { "type": "integer", "minimum": 1 },
+        "mountedSurfaces": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "lifecycle": { "enum": ["active", "mothballed", "shared", "unknown", "unspecified"] },
+        "featureGate": { "enum": ["observed", "not-observed", "unknown"] },
+        "summary": { "type": "string", "minLength": 1 },
+        "limitations": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "mappingContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "composePath", "service", "sourceKind", "hostRoot", "containerRoot"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^mapping-context:[a-f0-9]{24}$" },
+        "composePath": { "$ref": "common.schema.json#/$defs/relativePath" },
+        "service": { "type": "string", "minLength": 1 },
+        "sourceKind": { "enum": ["bind-mount", "docker-copy"] },
+        "hostRoot": { "type": "string" },
+        "containerRoot": { "type": "string", "minLength": 1 },
+        "buildContext": { "type": "string" },
+        "dockerfile": { "$ref": "common.schema.json#/$defs/relativePath" },
+        "workingDirectory": { "type": "string", "minLength": 1 }
+      }
+    },
+    "severityCalibration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "detectorSeverity", "ceiling", "basis", "runtimeReachability", "rationale"],
+      "properties": {
+        "version": { "const": "static-reachability-v1" },
+        "detectorSeverity": { "enum": ["info", "low", "medium", "high"] },
+        "ceiling": { "enum": ["low", "medium", "high"] },
+        "basis": {
+          "enum": [
+            "static-production-path-no-observed-feature-gate",
+            "static-production-path-feature-gated",
+            "static-non-production-path",
+            "static-test-only-path",
+            "static-mothballed-path",
+            "static-unreachable-path",
+            "static-reachability-incomplete"
+          ]
+        },
+        "runtimeReachability": { "const": "not-evaluated" },
+        "rationale": { "type": "string", "minLength": 1 }
+      }
+    },
+    "reviewAnchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "$ref": "common.schema.json#/$defs/relativePath" },
+        "sha256": { "$ref": "common.schema.json#/$defs/sha256" }
+      }
+    },
+    "reviewPriority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "band", "severityRank", "impactRank", "confidenceRank", "instanceCount"],
+      "properties": {
+        "version": { "const": "static-actionability-v1" },
+        "band": {
+          "enum": [
+            "production-ungated",
+            "production-gate-unknown",
+            "production-gated",
+            "cli",
+            "build-migration-seeder",
+            "reachability-incomplete",
+            "test",
+            "inactive"
+          ]
+        },
+        "severityRank": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "impactRank": { "type": "integer", "minimum": 0, "maximum": 7 },
+        "confidenceRank": { "type": "integer", "minimum": 0, "maximum": 4 },
+        "instanceCount": { "type": "integer", "minimum": 1 }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "dependentRequired": {
+    "instances": ["instanceCount"],
+    "reviewId": ["reviewAnchors", "reviewPriority", "refutationCondition"],
+    "reviewAnchors": ["reviewId", "reviewPriority", "refutationCondition"],
+    "reviewPriority": ["reviewId", "reviewAnchors", "refutationCondition"],
+    "refutationCondition": ["reviewId", "reviewAnchors", "reviewPriority"]
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "subject": {} }, "required": ["subject"] },
+      "then": {
+        "properties": {
+          "category": { "const": "contract-mismatch" },
+          "ruleId": { "type": "string", "pattern": "^contract/data-" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "instanceCount": {}, "instances": {} },
+        "required": ["instanceCount"],
+        "not": { "properties": { "instances": {} }, "required": ["instances"] }
+      },
+      "then": {
+        "properties": {
+          "instanceCount": { "const": 1 }
+        }
+      }
+    }
+  ],
+  "required": ["schemaVersion", "id", "category", "ruleId", "status", "severity", "confidence", "title", "description", "relatedPaths", "signals", "evidence", "nextValidation"],
+  "properties": {
+    "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "id": { "$ref": "common.schema.json#/$defs/findingId" },
+    "category": { "enum": ["dead-code-candidate", "contract-mismatch", "architecture-mismatch", "operational-defect", "review-inventory", "latent-hazard"] },
+    "ruleId": { "type": "string", "minLength": 1 },
+    "subject": { "$ref": "#/$defs/dataContractSubject" },
+    "kind": { "enum": ["defect-candidate", "review-inventory", "latent-hazard"] },
+    "patternKey": { "type": "string", "minLength": 1 },
+    "instanceCount": { "type": "integer", "minimum": 1 },
+    "instances": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/findingInstance" } },
+    "impactContext": { "$ref": "#/$defs/impactContext" },
+    "mechanism": { "type": "string", "minLength": 1 },
+    "mappingContexts": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/mappingContext" } },
+    "severityCalibration": { "$ref": "#/$defs/severityCalibration" },
+    "reviewId": { "type": "string", "pattern": "^finding_review_sha256_[a-f0-9]{64}(?::occurrence:[1-9][0-9]*)?$" },
+    "reviewAnchors": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/reviewAnchor" } },
+    "reviewPriority": { "$ref": "#/$defs/reviewPriority" },
+    "refutationCondition": { "type": "string", "minLength": 1 },
+    "status": { "const": "candidate" },
+    "severity": { "enum": ["info", "low", "medium", "high"] },
+    "confidence": { "enum": ["confirmed", "high", "medium", "low", "unknown"] },
+    "title": { "type": "string", "minLength": 1 },
+    "description": { "type": "string", "minLength": 1 },
+    "path": { "$ref": "common.schema.json#/$defs/relativePath" },
+    "location": { "$ref": "common.schema.json#/$defs/location" },
+    "relatedPaths": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/relativePath" } },
+    "signals": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "evidence": { "type": "array", "minItems": 1, "items": { "$ref": "common.schema.json#/$defs/evidence" } },
+    "nextValidation": { "type": "string", "minLength": 1 }
+  }
+}

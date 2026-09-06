@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.local/schemas/v1/real-target-corpus-report.schema.json",
+  "title": "Atlas real-target regression report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "producer", "tier", "corpusId", "corpusDigest", "target", "status", "cases", "summary", "realTargetRecall", "diagnostics"],
+  "properties": {
+    "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "executionPolicy"],
+      "properties": {
+        "name": { "const": "atlas/real-target-regression" },
+        "version": { "type": "string", "minLength": 1 },
+        "executionPolicy": { "const": "static-read-only" }
+      }
+    },
+    "tier": { "const": "real-target" },
+    "corpusId": { "type": "string", "minLength": 1 },
+    "corpusDigest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "expectedRevision", "verification", "detached", "clean"],
+      "properties": {
+        "repository": { "type": "string", "minLength": 1 },
+        "expectedRevision": { "type": "string", "pattern": "^[0-9a-f]{40}(?:[0-9a-f]{24})?$" },
+        "observedRevision": { "type": "string", "pattern": "^[0-9a-f]{40}(?:[0-9a-f]{24})?$" },
+        "verification": { "enum": ["verified", "not-evaluated"] },
+        "detached": { "type": "boolean" },
+        "clean": { "type": "boolean" }
+      }
+    },
+    "status": { "enum": ["passed", "failed", "not-evaluated"] },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "family", "ruleId", "mechanismId", "kind", "anchor", "outcome", "observed"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "family": { "type": "string", "minLength": 1 },
+          "ruleId": { "type": "string", "minLength": 1 },
+          "mechanismId": { "type": "string", "minLength": 1 },
+          "kind": { "enum": ["finding", "container-mapping"] },
+          "anchor": { "$ref": "real-target-corpus.schema.json#/$defs/anchor" },
+          "outcome": { "enum": ["passed", "failed", "not-evaluated"] },
+          "observed": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["matches", "anchors", "diagnosticCodes"],
+            "properties": {
+              "matches": { "type": "integer", "minimum": 0 },
+              "anchors": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": { "type": "string", "minLength": 1 }
+              },
+              "diagnosticCodes": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": { "type": "string", "minLength": 1 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "evaluated", "passed", "failed"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "evaluated": { "type": "integer", "minimum": 0 },
+        "passed": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "realTargetRecall": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["numerator", "denominator"],
+      "properties": {
+        "numerator": { "type": "integer", "minimum": 0 },
+        "denominator": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "message"],
+        "properties": {
+          "code": { "type": "string", "minLength": 1 },
+          "message": { "type": "string", "minLength": 1 },
+          "path": { "$ref": "common.schema.json#/$defs/relativePath" }
+        }
+      }
+    }
+  }
+}

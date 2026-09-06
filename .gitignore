@@ -1,0 +1,71 @@
+node_modules/
+dist/
+coverage/
+.atlas-workspace/
+.atlas-local/
+.atlas-validation-workspace/
+.atlas-viewer/
+.atlas-*/
+.claude/
+.codex/
+.idea/
+.vscode/
+
+# Local tool state and generated test reports.
+.direnv/
+.envrc
+.dev.vars
+.dev.vars.*
+.npm/
+.pnpm-store/
+.nyc_output/
+playwright-report*/
+test-results*/
+*.lcov
+
+# Atlas does not load dotenv files. Keep local secrets out of Git while
+# allowing intentionally value-free templates and analyzer fixtures.
+.env
+.env.*
+!.env.example
+!.env.*.example
+!.env.template
+!.env.*.template
+.npmrc
+!.npmrc.example
+
+# Credentials and private key material are never repository inputs.
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+credentials.json
+service-account*.json
+.aws/
+.azure/
+.gcloud/
+.netrc
+.pypirc
+
+# Local databases and exported data may contain target-derived content.
+*.db
+*.sqlite
+*.sqlite3
+*.dump
+
+# Historical target/reference evidence remains local and is never published.
+reference/*
+!reference/README.md
+
+*.log
+*.pid
+*.tmp
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
