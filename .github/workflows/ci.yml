@@ -18,6 +18,14 @@ jobs:
     name: ${{ matrix.os }} / Node.js 22
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
+    env:
+      # Windows exposes its default user temp directory through an 8.3 alias
+      # (RUNNER~1). Atlas deliberately distinguishes canonical paths from
+      # paths traversing aliases/reparse points, so keep test fixtures in the
+      # runner's canonical, job-scoped temporary directory on every platform.
+      TMPDIR: ${{ runner.temp }}
+      TEMP: ${{ runner.temp }}
+      TMP: ${{ runner.temp }}
     strategy:
       fail-fast: false
       matrix:
