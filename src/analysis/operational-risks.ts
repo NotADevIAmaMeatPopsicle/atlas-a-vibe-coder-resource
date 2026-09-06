@@ -908,7 +908,7 @@ function composeShortBind(
   // In Compose short syntax, only ./ and ../ sources are unambiguously host
   // binds. Bare names are named volumes and a single absolute path is an
   // anonymous container volume; neither describes a repository mapping.
-  const mapping = /^(\.{1,2}(?:\/[^:'"\s]+)*)\s*:\s*(\/[^:'"\s]+)(?::[^\s#]+)?$/u.exec(scalar);
+  const mapping = /^(\.{1,2}(?:\/[^:'"\s]+)?)\s*:\s*(\/[^:'"\s]+)(?::[^\s#]+)?$/u.exec(scalar);
   if (!mapping) return undefined;
   return {
     hostRoot: mapping[1]!,

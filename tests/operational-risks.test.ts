@@ -1265,6 +1265,15 @@ test('host/container analysis coalesces mapping contexts at one source defect', 
   assert.deepEqual(reversed, findings);
 });
 
+test('malformed deeply nested Compose bind paths are rejected without ambiguous regex backtracking', () => {
+  const adversarialSource = `./${'!/'.repeat(10_000)}missing-target`;
+  const result = detect([
+    analysisFile('compose.yml', `services:\n  app:\n    volumes:\n      - ${adversarialSource}\n`)
+  ]);
+  assert.equal(result.findings.some((entry) => entry.ruleId === OPERATIONAL_RULE_IDS.hostContainerPath), false);
+  assert.equal(result.containerCoverage.length, 0);
+});
+
 test('bind mounts and Docker COPY are one path-divergence mechanism when the source fix is shared', () => {
   const files = [
     analysisFile('compose.bind.yml', 'services:\n  app:\n    volumes:\n      - ./src:/app\n'),

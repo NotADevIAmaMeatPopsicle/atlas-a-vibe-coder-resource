@@ -183,7 +183,13 @@ test('nearest package resolver config scopes identical aliases to each importer'
     analysisFile('apps/alpha/package.json', '{"name":"alpha","private":true}\n'),
     analysisFile('apps/alpha/tsconfig.json', '{"compilerOptions":{"baseUrl":".","paths":{"@/*":["src/*"]}}}\n'),
     analysisFile('apps/alpha/src/thing.ts', 'export const thing = "alpha";\n'),
-    analysisFile('apps/alpha/src/use.ts', 'import { thing } from "@/thing"; void thing;\n'),
+    analysisFile('apps/alpha/src/$&.ts', 'export const replacementLiteral = true;\n'),
+    analysisFile('apps/alpha/src/use.ts', [
+      'import { thing } from "@/thing";',
+      'import { replacementLiteral } from "@/$&";',
+      'void thing; void replacementLiteral;',
+      ''
+    ].join('\n')),
     analysisFile('apps/beta/package.json', '{"name":"beta","private":true}\n'),
     analysisFile('apps/beta/jsconfig.json', '{"compilerOptions":{"baseUrl":".","paths":{"@/*":["lib/*"]}}}\n'),
     analysisFile('apps/beta/lib/thing.js', 'export const thing = "beta";\n'),
@@ -192,8 +198,13 @@ test('nearest package resolver config scopes identical aliases to each importer'
 
   const result = analyzeJavaScriptTypeScript(files, PROFILE);
   assert.equal(
-    result.relationships.find((entry) => entry.fromPath === 'apps/alpha/src/use.ts')?.toPath,
+    result.relationships.find((entry) =>
+      entry.fromPath === 'apps/alpha/src/use.ts' && entry.specifier === '@/thing')?.toPath,
     'apps/alpha/src/thing.ts'
+  );
+  assert.equal(
+    result.relationships.find((entry) => entry.specifier === '@/$&')?.toPath,
+    'apps/alpha/src/$&.ts'
   );
   assert.equal(
     result.relationships.find((entry) => entry.fromPath === 'apps/beta/src/use.js')?.toPath,
@@ -227,20 +238,25 @@ test('workspace package exports resolve only within a declared workspace and amb
     analysisFile('apps/web/src/use.ts', [
       'import type { PublicType } from "@scope/shared";',
       'import { feature } from "@scope/shared/feature";',
+      'import { mirrored } from "@scope/shared/mirrored/button";',
+      'import { replacementLiteral } from "@scope/shared/mirrored/$&";',
       'import { escaped } from "unsafe-local";',
       'import { external } from "not-in-workspace";',
-      'void feature; void escaped; void external;',
+      'void feature; void mirrored; void replacementLiteral; void escaped; void external;',
       ''
     ].join('\n')),
     analysisFile('packages/shared/package.json', JSON.stringify({
       name: '@scope/shared',
       exports: {
         '.': './src/index.ts',
-        './feature': './src/feature.ts'
+        './feature': './src/feature.ts',
+        './mirrored/*': './src/*/mirror/*.ts'
       }
     })),
     analysisFile('packages/shared/src/index.ts', 'export interface PublicType { ok: true }\n'),
     analysisFile('packages/shared/src/feature.ts', 'export const feature = true;\n'),
+    analysisFile('packages/shared/src/button/mirror/button.ts', 'export const mirrored = true;\n'),
+    analysisFile('packages/shared/src/$&/mirror/$&.ts', 'export const replacementLiteral = true;\n'),
     analysisFile('packages/unsafe/package.json', '{"name":"unsafe-local","exports":"./../escaped.ts"}\n'),
     analysisFile('packages/escaped.ts', 'export const escaped = true;\n')
   ];
@@ -250,6 +266,14 @@ test('workspace package exports resolve only within a declared workspace and amb
   assert.equal(rootImport?.toPath, 'packages/shared/src/index.ts');
   assert.equal(rootImport?.typeOnly, true);
   assert.equal(result.relationships.find((entry) => entry.specifier === '@scope/shared/feature')?.toPath, 'packages/shared/src/feature.ts');
+  assert.equal(
+    result.relationships.find((entry) => entry.specifier === '@scope/shared/mirrored/button')?.toPath,
+    'packages/shared/src/button/mirror/button.ts'
+  );
+  assert.equal(
+    result.relationships.find((entry) => entry.specifier === '@scope/shared/mirrored/$&')?.toPath,
+    'packages/shared/src/$&/mirror/$&.ts'
+  );
   assert.equal(result.relationships.find((entry) => entry.specifier === 'unsafe-local')?.resolution, 'unresolved-internal');
   assert.equal(result.relationships.find((entry) => entry.specifier === 'not-in-workspace')?.resolution, 'external-package');
 

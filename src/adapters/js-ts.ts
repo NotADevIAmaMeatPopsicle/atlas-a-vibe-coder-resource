@@ -165,7 +165,15 @@ function aliasTargets(specifier: string, aliases: Record<string, string[]>): Ali
   );
   const selected = matches[0];
   return selected
-    ? { matched: true, targets: selected.targets.map((target) => target.replace('*', selected.captured)) }
+    ? {
+        matched: true,
+        targets: selected.targets.map((target) => {
+          const star = target.indexOf('*');
+          return star === -1
+            ? target
+            : `${target.slice(0, star)}${selected.captured}${target.slice(star + 1)}`;
+        })
+      }
     : { matched: false, targets: [] };
 }
 
@@ -607,7 +615,7 @@ function packageExportValue(exportsValue: unknown, subpath: string): unknown {
   const selected = wildcardMatches[0];
   if (!selected) return undefined;
   const replace = (value: unknown): unknown => {
-    if (typeof value === 'string') return value.replace('*', selected.captured);
+    if (typeof value === 'string') return value.split('*').join(selected.captured);
     if (Array.isArray(value)) return value.map(replace);
     const nested = objectValue(value);
     if (!nested) return value;
