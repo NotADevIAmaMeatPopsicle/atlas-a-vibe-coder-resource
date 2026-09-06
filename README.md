@@ -20,6 +20,42 @@ Atlas favors explicit uncertainty over confident guesses. Unsupported or
 dynamic behavior becomes a diagnostic or an incomplete-health result instead
 of a fabricated finding.
 
+## Architecture at a glance
+
+```mermaid
+flowchart TB
+    Config[Target descriptor and analysis profile] --> Engine[Bounded discovery and static analysis]
+    Target[JavaScript or TypeScript repository] --> Engine
+    Engine --> Run[(Verified immutable run)]
+    Controls[Synthetic regression controls] --> Run
+    Run --> Explore[Inspect, query, diff, memory, review, or export an offline viewer]
+```
+
+Atlas reads the target without running its code. Every downstream tool consumes
+verified run artifacts; see the [architecture guide](./docs/ARCHITECTURE.md) for
+the trust boundaries and module-level design.
+
+## See Atlas in action
+
+These screenshots were generated from the bundled synthetic example. They do
+not contain source code or data from a private repository.
+
+### Prioritize evidence-backed findings
+
+![Atlas investigation workspace showing a prioritized finding, supporting evidence, impact context, and next validation](https://raw.githubusercontent.com/NotADevIAmaMeatPopsicle/atlas-a-vibe-coder-resource/main/.github/assets/atlas-investigation-workspace.png)
+
+The investigation workspace brings the claim, evidence, severity calibration,
+limitations, and next validation together without requiring access to source
+bodies.
+
+### Explore repository relationships
+
+![Atlas system map showing files, dependency relationships, and the selected finding](https://raw.githubusercontent.com/NotADevIAmaMeatPopsicle/atlas-a-vibe-coder-resource/main/.github/assets/atlas-system-map.png)
+
+The system map connects files, dependencies, unresolved references, and
+findings while keeping the complete evidence tables and Mermaid export
+available for deeper review.
+
 ## Project status
 
 Atlas is early public software. The current source version is `0.2.0`; APIs,

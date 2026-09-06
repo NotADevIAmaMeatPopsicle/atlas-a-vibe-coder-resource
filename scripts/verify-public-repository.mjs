@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { lstatSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
@@ -10,7 +11,7 @@ const MAX_SCANNED_FILE_BYTES = 16 * 1024 * 1024;
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
     cwd: root,
-    encoding: options.encoding ?? 'utf8',
+    encoding: Object.hasOwn(options, 'encoding') ? options.encoding : 'utf8',
     input: options.input,
     windowsHide: true,
     maxBuffer: options.maxBuffer ?? MAX_SCANNED_FILE_BYTES + 1024 * 1024
@@ -64,6 +65,14 @@ const detectors = [
 const sensitivePath = /(?:^|\/)(?:\.env(?:\.|$)|credentials\.json$|service-account[^/]*\.json$|id_(?:rsa|dsa|ecdsa|ed25519)$|[^/]+\.(?:db|dump|jks|key|keystore|p12|pem|pfx|sqlite|sqlite3))$/iu;
 const allowedSensitivePaths = new Set(['examples/minimal-js-ts-repository/.env.example']);
 const allowedEmailDomains = new Set(['example.invalid', 'example.test', 'users.noreply.github.com']);
+const allowedBinaryDigests = new Map([
+  ['.github/assets/atlas-investigation-workspace.png', new Set([
+    'f5394565c626c6ef2af5a06faa8f319bc871b23300b9f5455d89dbf622fe049b'
+  ])],
+  ['.github/assets/atlas-system-map.png', new Set([
+    '1aa73a6c93dba1c6b301104b00a166620c167ee441d80843bc58ddb54b11772a'
+  ])]
+]);
 const emailPattern = /[A-Z0-9._%+-]+@([A-Z0-9.-]+\.[A-Z]{2,})/giu;
 
 function textFromBytes(bytes) {
@@ -89,7 +98,15 @@ function scanPath(relativePath, location, findings) {
   }
 }
 
-function scanFile(filePath, location, findings) {
+function scanBinary(bytes, relativePath, location, findings) {
+  const portable = relativePath.replaceAll('\\', '/');
+  const digest = createHash('sha256').update(bytes).digest('hex');
+  if (!allowedBinaryDigests.get(portable)?.has(digest)) {
+    findings.add('unapproved binary content: ' + location);
+  }
+}
+
+function scanFile(filePath, relativePath, location, findings) {
   const metadata = lstatSync(filePath);
   if (!metadata.isFile()) {
     findings.add('non-regular file: ' + location);
@@ -99,8 +116,10 @@ function scanFile(filePath, location, findings) {
     findings.add('file exceeds ' + MAX_SCANNED_FILE_BYTES + '-byte audit limit: ' + location);
     return;
   }
-  const text = textFromBytes(readFileSync(filePath));
-  if (text !== undefined) scanText(text, location, findings);
+  const bytes = readFileSync(filePath);
+  const text = textFromBytes(bytes);
+  if (text === undefined) scanBinary(bytes, relativePath, location, findings);
+  else scanText(text, location, findings);
 }
 
 const findings = new Set();
@@ -110,7 +129,7 @@ const currentFiles = String(git(['ls-files', '--cached', '--others', '--exclude-
   .sort();
 for (const relativePath of currentFiles) {
   scanPath(relativePath, 'working tree ' + relativePath, findings);
-  scanFile(path.join(root, relativePath), 'working tree ' + relativePath, findings);
+  scanFile(path.join(root, relativePath), relativePath, 'working tree ' + relativePath, findings);
 }
 
 const historyObjects = String(git(['rev-list', '--objects', '--all']))
@@ -138,6 +157,12 @@ for (const record of historyObjectChecks) {
   if (!Number.isSafeInteger(size) || size < 0 || size > MAX_SCANNED_FILE_BYTES) {
     const relativePath = historyObjectPaths.get(objectId) ?? '(unknown path)';
     findings.add('historical blob exceeds ' + MAX_SCANNED_FILE_BYTES + '-byte audit limit: Git history ' + relativePath);
+    continue;
+  }
+  const relativePath = historyObjectPaths.get(objectId) ?? '(unknown path)';
+  const bytes = git(['cat-file', 'blob', objectId], { encoding: null, maxBuffer: size + 1024 });
+  if (textFromBytes(bytes) === undefined) {
+    scanBinary(bytes, relativePath, 'Git history ' + relativePath, findings);
   }
 }
 
@@ -146,9 +171,6 @@ const historyPatch = String(git(
   { maxBuffer: 128 * 1024 * 1024 }
 ));
 scanText(historyPatch, 'reachable Git history', findings);
-if (/^Binary files .* differ$/mu.test(historyPatch) || /^GIT binary patch$/mu.test(historyPatch)) {
-  findings.add('binary content requires manual inspection: reachable Git history');
-}
 
 const historyMetadata = String(git(['log', '--all', '--format=%H%x00%an%x00%ae%x00%s%x00']))
   .split('\0')
@@ -166,7 +188,7 @@ if (!Array.isArray(packageReports) || packageReports.length !== 1 || !Array.isAr
 }
 for (const entry of packageReports[0].files) {
   scanPath(entry.path, 'npm archive ' + entry.path, findings);
-  scanFile(path.join(root, entry.path), 'npm archive ' + entry.path, findings);
+  scanFile(path.join(root, entry.path), entry.path, 'npm archive ' + entry.path, findings);
 }
 
 if (findings.size) {
