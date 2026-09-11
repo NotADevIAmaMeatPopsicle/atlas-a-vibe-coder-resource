@@ -1,8 +1,8 @@
 {
   "name": "atlas-codebase-memory",
   "version": "0.2.0",
-  "private": true,
   "license": "Apache-2.0",
+  "keywords": ["codebase-analysis", "static-analysis", "typescript", "javascript", "local-first", "cli", "code-quality", "developer-tools", "ast"],
   "author": "Michael Griffin <NotADevIAmaMeatPopsicle@users.noreply.github.com>",
   "packageManager": "npm@10.9.4",
   "description": "Atlas - A Vibe Coder Resource for local-first, evidence-backed codebase analysis.",
